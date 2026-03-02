@@ -41,6 +41,7 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>
                     <Route path=StaticSegment("") view=HomePage/>
+                    <Route path=StaticSegment("/branding") view=BrandingPage/>
                 </Routes>
             </main>
         </Router>
@@ -57,5 +58,16 @@ fn HomePage() -> impl IntoView {
     view! {
         <h1>"Welcome to Leptos!"</h1>
         <button on:click=on_click>"Click Me: " {count}</button>
+    }
+}
+
+pub async fn add_todo(title: String) -> Result<(), ServerFnError> {
+    todo!()
+}
+
+#[component]
+fn BrandingPage() -> impl IntoView {
+    view! {
+        <h1>"Branding"</h1>
     }
 }
