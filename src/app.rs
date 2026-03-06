@@ -57,17 +57,38 @@ fn HomePage() -> impl IntoView {
 
     view! {
         <h1>"Welcome to Leptos!"</h1>
-        <button on:click=on_click>"Click Me: " {count}</button>
+            <button on:click=on_click>"Click Me: " {count}</button>
     }
 }
 
-pub async fn add_todo(title: String) -> Result<(), ServerFnError> {
+
+#[server]
+pub async fn add_todo(_title: String) -> Result<(), ServerFnError> {
     todo!()
 }
 
 #[component]
 fn BrandingPage() -> impl IntoView {
+    let add_todo = ServerAction::<AddTodo>::new();
+    // holds the latest *returned* value from the server
+    // let value = add_todo.value();
+    // check if the server has returned an error
+    // let has_error = move || value.with(|val| matches!(val, Some(Err(_))));
+
     view! {
-        <h1>"Branding"</h1>
+        <h1>Брэндировать</h1>
+        <ActionForm action=add_todo>
+            <label>
+                "Add a Todo"
+                // `title` matches the `title` argument to `add_todo`
+                <input type="text" name="title"/>
+            </label>
+            
+            <input type="submit" value="Add"/>
+                        <button class="button">Default</button>
+            <button class="button outlined">Outlined</button>
+            <button class="button tonal">Tonal</button>
+            <button class="button filled">Filled</button>
+        </ActionForm>
     }
 }
