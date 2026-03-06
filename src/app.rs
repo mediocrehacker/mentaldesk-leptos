@@ -10,14 +10,14 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
         <!DOCTYPE html>
         <html lang="en">
             <head>
-                <meta charset="utf-8"/>
-                <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <AutoReload options=options.clone() />
-                <HydrationScripts options/>
-                <MetaTags/>
+                <HydrationScripts options />
+                <MetaTags />
             </head>
             <body>
-                <App/>
+                <App />
             </body>
         </html>
     }
@@ -31,17 +31,17 @@ pub fn App() -> impl IntoView {
     view! {
         // injects a stylesheet into the document <head>
         // id=leptos means cargo-leptos will hot-reload this stylesheet
-        <Stylesheet id="leptos" href="/pkg/mentaldesk.css"/>
+        <Stylesheet id="leptos" href="/pkg/mentaldesk.css" />
 
         // sets the document title
-        <Title text="Welcome to Leptos"/>
+        <Title text="Welcome to Leptos" />
 
         // content for this welcome page
         <Router>
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>
-                    <Route path=StaticSegment("") view=HomePage/>
-                    <Route path=StaticSegment("/branding") view=BrandingPage/>
+                    <Route path=StaticSegment("") view=HomePage />
+                    <Route path=StaticSegment("/branding") view=BrandingPage />
                 </Routes>
             </main>
         </Router>
@@ -57,7 +57,7 @@ fn HomePage() -> impl IntoView {
 
     view! {
         <h1>"Welcome to Leptos!"</h1>
-       <button on:click=on_click>"Click Me: " {count}</button>
+        <button on:click=on_click>"Click Me: " {count}</button>
     }
 }
 
@@ -78,13 +78,12 @@ fn BrandingPage() -> impl IntoView {
         <h1>Брэндировать</h1>
         <ActionForm action=add_todo>
             <label>
-                "Add a Todo"
-                // `title` matches the `title` argument to `add_todo`
-                <input type="text" name="title"/>
+                "Add a Todo" // `title` matches the `title` argument to `add_todo`
+                <input type="text" name="title" />
             </label>
 
-            <input type="submit" value="Add"/>
-                        <button class="button">Default</button>
+            <input type="submit" value="Add" />
+            <button class="button">Default</button>
             <button class="button outlined">Outlined</button>
             <button class="button tonal">Tonal</button>
             <button class="button filled">Filled</button>
