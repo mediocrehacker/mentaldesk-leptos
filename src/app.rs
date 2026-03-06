@@ -38,12 +38,16 @@ pub fn App() -> impl IntoView {
 
         // content for this welcome page
         <Router>
-            <main>
-                <Routes fallback=|| "Page not found.".into_view()>
-                    <Route path=StaticSegment("") view=HomePage />
-                    <Route path=StaticSegment("/branding") view=BrandingPage />
-                </Routes>
-            </main>
+            <div id="app">
+                <nav>HEADER</nav>
+                <main class="wrapper">
+                    <Routes fallback=|| "Page not found.".into_view()>
+                        <Route path=StaticSegment("") view=HomePage />
+                        <Route path=StaticSegment("/branding") view=BrandingPage />
+                    </Routes>
+                </main>
+                <footer>FOOTER</footer>
+            </div>
         </Router>
     }
 }
@@ -75,18 +79,49 @@ fn BrandingPage() -> impl IntoView {
     // let has_error = move || value.with(|val| matches!(val, Some(Err(_))));
 
     view! {
-        <h1>Брэндировать</h1>
-        <ActionForm action=add_todo>
-            <label>
-                "Add a Todo" // `title` matches the `title` argument to `add_todo`
-                <input type="text" name="title" />
-            </label>
+        <header>
+            <h2>Брэндировать</h2>
+            <div>
+                <p>Заголовок рабочего листа</p>
+            </div>
+        </header>
 
-            <input type="submit" value="Add" />
-            <button class="button">Default</button>
-            <button class="button outlined">Outlined</button>
-            <button class="button tonal">Tonal</button>
-            <button class="button filled">Filled</button>
-        </ActionForm>
+        <div class="branding">
+            <div class="branding__form">
+                <ActionForm action=add_todo>
+                    <div>
+                        <label class="field">
+                            <span class="label">ФИО Клиента</span>
+                            <input type="text" id="client_name" client_name="title" />
+                        </label>
+                    </div>
+                    <div>
+                        <label class="field">
+                            <span class="label">
+                                Форма обращение к клиенту
+                            </span>
+                            <input
+                                type="text"
+                                id="client_title"
+                                placeholder="Клиент:"
+                                client_title="title"
+                            />
+                        </label>
+                    </div>
+                    <div>
+                        <input
+                            class="button tonal"
+                            type="submit"
+                            value="Сгенерировать"
+                        />
+                    </div>
+                </ActionForm>
+            </div>
+            <div class="branding__preview">
+                <div class="card elevated">
+                    <img src="worksheet.png" />
+                </div>
+            </div>
+        </div>
     }
 }
