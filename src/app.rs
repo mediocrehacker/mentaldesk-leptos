@@ -66,17 +66,27 @@ fn HomePage() -> impl IntoView {
 }
 
 #[server]
-pub async fn add_todo(_title: String) -> Result<(), ServerFnError> {
-    todo!()
+pub async fn branding(client_name: String, client_title: String) -> Result<(), ServerFnError> {
+    let client_title = if client_title.trim().is_empty() {
+        "Клиент:".to_string()
+    } else {
+        client_title
+    };
+
+    dbg!(client_name);
+    dbg!(client_title);
+
+    
+    Ok(())
 }
 
 #[component]
 fn BrandingPage() -> impl IntoView {
-    let add_todo = ServerAction::<AddTodo>::new();
+    let branding = ServerAction::<Branding>::new();
     // holds the latest *returned* value from the server
-    // let value = add_todo.value();
+    let value = branding.value();
     // check if the server has returned an error
-    // let has_error = move || value.with(|val| matches!(val, Some(Err(_))));
+    let has_error = move || value.with(|val| matches!(val, Some(Err(_))));
 
     view! {
         <header>
@@ -88,11 +98,11 @@ fn BrandingPage() -> impl IntoView {
 
         <div class="branding">
             <div class="branding__form">
-                <ActionForm action=add_todo>
+                <ActionForm action=branding>
                     <div>
                         <label class="field">
                             <span class="label">ФИО Клиента</span>
-                            <input type="text" id="client_name" client_name="title" />
+                            <input type="text" name="client_name"  />
                         </label>
                     </div>
                     <div>
@@ -102,9 +112,8 @@ fn BrandingPage() -> impl IntoView {
                             </span>
                             <input
                                 type="text"
-                                id="client_title"
+                                name="client_title"
                                 placeholder="Клиент:"
-                                client_title="title"
                             />
                         </label>
                     </div>
