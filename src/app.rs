@@ -57,10 +57,9 @@ fn HomePage() -> impl IntoView {
 
     view! {
         <h1>"Welcome to Leptos!"</h1>
-            <button on:click=on_click>"Click Me: " {count}</button>
+       <button on:click=on_click>"Click Me: " {count}</button>
     }
 }
-
 
 #[server]
 pub async fn add_todo(_title: String) -> Result<(), ServerFnError> {
@@ -83,7 +82,7 @@ fn BrandingPage() -> impl IntoView {
                 // `title` matches the `title` argument to `add_todo`
                 <input type="text" name="title"/>
             </label>
-            
+
             <input type="submit" value="Add"/>
                         <button class="button">Default</button>
             <button class="button outlined">Outlined</button>
