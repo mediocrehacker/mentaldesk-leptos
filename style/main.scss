@@ -46,6 +46,6 @@ header {
     gap: var(--size-4);
 }
 
-.branding__preview img {
+.branding__preview embed {
     max-height: calc(80vh - 4rem);
 }

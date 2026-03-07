@@ -1,15 +1,18 @@
+use handlebars::Handlebars;
+use leptos::leptos_dom::logging::console_debug_log;
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
     StaticSegment,
 };
-use std::collections::HashMap;
-use handlebars::Handlebars;
+use miette::Result;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use tempfile::tempdir;
+use base64::prelude::*;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -70,18 +73,16 @@ fn HomePage() -> impl IntoView {
     }
 }
 
-
 #[server]
-pub async fn branding(client_name: String, client_title: String) -> Result<(), ServerFnError> {
+pub async fn branding(client_name: String, client_title: String) -> Result<String, ServerFnError> {
     let client_title = if client_title.trim().is_empty() {
         "Клиент:".to_string()
     } else {
         client_title
     };
 
-
     let payload = CreateWorksheet {
-        template_path: "assets/worksheets/bolevoj-dnevnik".to_string(),
+        template_path: "assets/worksheets/dnevnik-goryachih-tochek".to_string(),
         client_title: "String".to_string(),
         client_name: client_name.clone(),
         practice_name: "String".to_string(),
@@ -90,6 +91,8 @@ pub async fn branding(client_name: String, client_title: String) -> Result<(), S
     };
 
     let template_path = format!("{}/worksheet.tex", payload.template_path);
+    dbg!(&template_path);
+
     let content = tokio::fs::read_to_string(&template_path).await?;
 
     let reg = Handlebars::new();
@@ -101,11 +104,13 @@ pub async fn branding(client_name: String, client_title: String) -> Result<(), S
     let latex = branding_(content, &payload)?;
 
     let hash = Sha256::digest(&latex);
-    let filename = format!("assets/branded/worksheets/{:x}.pdf", hash);
+    let filename = format!("public/worksheets/{:x}.pdf", hash);
     let path = compile_latex(&filename, &latex).await?;
-    let data = tokio::fs::read(path).await?;
+    // let data = tokio::fs::read(path).await?;
 
-    Ok(())
+    let web_filename = format!("worksheets/{:x}.pdf", hash);
+    dbg!(&web_filename);
+    Ok(web_filename)
 }
 
 #[component]
@@ -115,6 +120,7 @@ fn BrandingPage() -> impl IntoView {
     let value = branding.value();
     // check if the server has returned an error
     let has_error = move || value.with(|val| matches!(val, Some(Err(_))));
+    console_debug_log("test");
 
     view! {
         <header>
@@ -155,13 +161,60 @@ fn BrandingPage() -> impl IntoView {
                 </ActionForm>
             </div>
             <div class="branding__preview">
-                <div class="card elevated">
-                    <img src="worksheet.png" />
-                </div>
+            <div class="card elevated">
+                        // Display server response
+            <p>
+            // <embed type="application/pdf" src={
+            //     move || {
+            //         value.get().map(|res| match res {
+            //             Ok(v) => format!("{data:application/pdf;base64,}", BASE64_STANDARD.encode(v)),
+            //             Err(_) => "vec![]".to_string(),
+            //         })
+            //     }
+            // } />
+            <embed type="application/pdf" src={
+                move || {
+                    value.get().map(|res| match res {
+                        Ok(v) => format!("{}", v),
+                        Err(_) => "vec![]".to_string(),
+                    })
+                }
+            } />
+
+            </p>
+            </div>
+
             </div>
         </div>
     }
 }
+
+// #[component]
+// fn PdfPreview(
+//     #[prop(into)] value: MappedSignal<Option<Result<Vec<u8>, ServerFnError>>>,
+// ) -> impl IntoView {
+//     let x = value.read_untracked();
+//     let xx = {
+//         move || {
+//             value.get().map(|res| match res {
+//                 Ok(msg) => msg,
+//                 Err(_) => vec![],
+//             })
+//         }
+//     };
+
+//     view! {
+//         <embed   type="application/pdf"  />
+//             <embed src= {
+//            value.get().map(|res| match res {
+//                 Ok(v) => v,
+//                 Err(_) => vec![],
+//             })
+//         }
+//     } type="application/pdf" />
+
+//     }
+// }
 
 #[derive(Deserialize, Serialize, Debug)]
 struct CreateWorksheet {
@@ -185,19 +238,18 @@ fn branding_(content: String, worksheet: &CreateWorksheet) -> Result<String, Ser
     let s = serde_json::to_string(worksheet).unwrap();
     let data: HashMap<String, String> = serde_json::from_str(&s).unwrap();
     let latex = reg.render_template(&content, &data)?;
-    
+
     Ok(latex)
 }
 
 #[cfg(feature = "ssr")]
-pub async fn compile_latex(filename: &str, latex: &str) -> Result<PathBuf, ServerFnError> {
+pub async fn compile_latex(filename: &str, latex: &str) -> Result<(), ServerFnError> {
+    use std::process::Stdio;
     use tokio::fs::File;
     use tokio::io::AsyncWriteExt;
     use tokio::io::{AsyncBufReadExt, BufReader, BufWriter};
     use tokio::process::Command;
-    use std::process::Stdio;
 
-    
     let dir = tempdir()?;
     let workdir = dir.path();
     let tex_path = workdir.join("main.tex");
@@ -214,7 +266,6 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<PathBuf, Serve
     .await?;
     tokio::fs::copy("assets/shared/worksheet.cls", workdir.join("worksheet.cls")).await?;
     tokio::fs::copy("assets/shared/survey.cls", workdir.join("survey.cls")).await?;
-
 
     let mut child = Command::new("pdflatex")
         .current_dir(workdir)
@@ -247,42 +298,40 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<PathBuf, Serve
     // let _ = out_task.await;
     // let _ = err_task.await;
 
-
     let pdf_path = workdir.join("main.pdf");
 
     let out = PathBuf::from(filename);
     tokio::fs::copy(&pdf_path, &out).await?;
 
-    Ok(out)
-}
-
-
-#[cfg(feature = "ssr")]
-async fn create_worksheet(
-    payload: CreateWorksheet,
-) -> Result<(), ServerFnError> {
-    dbg!(&payload);
-
-    let template_path = format!("{}/worksheet.tex", payload.template_path);
-    let content = tokio::fs::read_to_string(&template_path).await?;
-
-    let reg = Handlebars::new();
-    let mut data: HashMap<String, String> = HashMap::default();
-    // data.insert("client_title".to_owned(), "client title".to_owned());
-    data.insert("clientName".to_owned(), "client name".to_owned());
-
-    let latex = reg.render_template(&content, &data)?;
-
-    let latex = branding_(content, &payload)?;
-
-    let hash = Sha256::digest(&latex);
-    let filename = format!("assets/branded/worksheets/{:x}.pdf", hash);
-    let path = compile_latex(&filename, &latex).await?;
-    let data = tokio::fs::read(path).await?;
-
-    // let worksheet_response = WorksheetResponse { filename, data };
-    // Ok(Json(worksheet_response))
-    
     Ok(())
 }
 
+// #[cfg(feature = "ssr")]
+// async fn create_worksheet(
+//     payload: CreateWorksheet,
+// ) -> Result<(), ServerFnError> {
+//     dbg!(&payload);
+
+//     let template_path = format!("{}/worksheet.tex", payload.template_path);
+//     dbg!(&template_path);
+//     let content = tokio::fs::read_to_string(&template_path).await?;
+
+//     let reg = Handlebars::new();
+//     let mut data: HashMap<String, String> = HashMap::default();
+//     // data.insert("client_title".to_owned(), "client title".to_owned());
+//     data.insert("clientName".to_owned(), "client name".to_owned());
+
+//     let latex = reg.render_template(&content, &data)?;
+
+//     let latex = branding_(content, &payload)?;
+
+//     let hash = Sha256::digest(&latex);
+//     let filename = format!("assets/branded/worksheets/{:x}.pdf", hash);
+//     let path = compile_latex(&filename, &latex).await?;
+//     let data = tokio::fs::read(path).await?;
+
+//     // let worksheet_response = WorksheetResponse { filename, data };
+//     // Ok(Json(worksheet_response))
+
+//     Ok(())
+// }
