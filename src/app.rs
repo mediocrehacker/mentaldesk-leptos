@@ -79,7 +79,7 @@ struct CreateWorksheet {
 
 
 #[server]
-pub async fn branding(client_name: String, client_title: String) -> Result<Vec<u8>, ServerFnError> {
+pub async fn branding(client_name: String, client_title: String, therapist_name: String, therapist_title: String, practice_name: String) -> Result<Vec<u8>, ServerFnError> {
     use sha2::{Digest, Sha256};
 
     let client_title = if client_title.trim().is_empty() {
@@ -92,9 +92,9 @@ pub async fn branding(client_name: String, client_title: String) -> Result<Vec<u
         template_path: "assets/worksheets/dnevnik-goryachih-tochek".to_string(),
         client_title: client_title.to_string(),
         client_name: client_name.clone(),
-        practice_name: "MentalDesk".to_string(),
-        therapist_title: "Therapist".to_string(),
-        therapist_name: "Name".to_string(),
+        practice_name: practice_name.clone(),
+        therapist_title: therapist_title.clone(),
+        therapist_name: therapist_name.clone(),
     };
     let template_path = format!("{}/worksheet.tex", payload.template_path);
     let content = tokio::fs::read_to_string(&template_path).await?;
@@ -131,8 +131,11 @@ fn BrandingPage() -> impl IntoView {
         let branding = branding.clone();
         move |_| {
             branding.dispatch(Branding {
-                client_name: "".to_string(),
+                client_name: "Кириллов Егор Маркович".to_string(),
                 client_title: "Клиент:".to_string(),
+                practice_name: "MetnalDesk".to_string(),
+                therapist_title: "Психотерапевт:".to_string(),
+                therapist_name: "Зубков Тимур Владимирович".to_string(),
             });
         }
     });
@@ -141,15 +144,6 @@ fn BrandingPage() -> impl IntoView {
     let value = branding.value();
     // check if the server has returned an error
     let _has_error = move || value.with(|val| matches!(val, Some(Err(_))));
-
-    // let url = move || {
-    //     value.get().map(|res| match res {
-    //         Ok(v) => {let pdf = pdf_bytes_to_url(v);
-    //                   console_debug_log("debug");
-    //                   pdf},
-    //         Err(e) => "".to_string(),
-    //     })
-    // };
 
     view! {
         <header>
@@ -169,6 +163,13 @@ fn BrandingPage() -> impl IntoView {
                         </label>
                     </div>
                     <div>
+                        <input
+                            class="button tonal"
+                            type="submit"
+                            value="Сгенерировать"
+                        />
+                    </div>
+                    <div>
                         <label class="field">
                             <span class="label">
                                 Форма обращение к клиенту
@@ -177,11 +178,30 @@ fn BrandingPage() -> impl IntoView {
                         </label>
                     </div>
                     <div>
-                        <input
-                            class="button tonal"
-                            type="submit"
-                            value="Сгенерировать"
-                        />
+                        <label class="field">
+                            <span class="label">Звание</span>
+                            <input
+                                type="text"
+                                name="therapist_title"
+                                placeholder="Психолог"
+                            />
+                        </label>
+                    </div>
+                    <div>
+                        <label class="field">
+                            <span class="label">ФИО Специалиста</span>
+                            <input
+                                type="text"
+                                name="therapist_name"
+                                placeholder="Соснина Мария Викторовна"
+                            />
+                        </label>
+                    </div>
+                    <div>
+                        <label class="field">
+                            <span class="label">Название Практики</span>
+                            <input type="text" name="practice_name" placeholder="MentalDesk" />
+                        </label>
                     </div>
                 </ActionForm>
             </div>
