@@ -104,12 +104,29 @@ pub async fn branding(client_name: String, client_title: String) -> Result<Strin
     let latex = branding_(content, &payload)?;
 
     let hash = Sha256::digest(&latex);
-    let filename = format!("public/worksheets/{:x}.pdf", hash);
+    let filename = format!("public/cache/{:x}.pdf", hash);
     let path = compile_latex(&filename, &latex).await?;
     // let data = tokio::fs::read(path).await?;
+// 3. Alternative: serve bytes via a server route
 
-    let web_filename = format!("worksheets/{:x}.pdf", hash);
+// If the bytes come from backend:
+
+// #[axum::handler]
+// async fn pdf() -> impl IntoResponse {
+//     let bytes: Vec<u8> = generate_pdf();
+
+//     (
+//         [(header::CONTENT_TYPE, "application/pdf")],
+//         bytes
+//     )
+// }
+
+// Then:
+
+// <PdfViewer url="/api/pdf" />
+    let web_filename = format!("cache/{:x}.pdf", hash);
     dbg!(&web_filename);
+
     Ok(web_filename)
 }
 
