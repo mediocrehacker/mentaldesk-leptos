@@ -147,6 +147,17 @@ fn pdf_bytes_to_url(bytes: &[u8]) -> String {
 #[component]
 fn BrandingPage() -> impl IntoView {
     let branding = ServerAction::<Branding>::new();
+
+    Effect::new({
+        let branding = branding.clone();
+        move |_| {
+            branding.dispatch(Branding {
+                client_name: "".to_string(),
+                client_title: "Клиент:".to_string(),
+            });
+        }
+    });
+    
     // holds the latest *returned* value from the server
     let value = branding.value();
     // check if the server has returned an error
@@ -197,19 +208,19 @@ fn BrandingPage() -> impl IntoView {
             </div>
 
             <div class="branding__preview">
-                <h3>Title</h3>
-                <embed
-                    type="application/pdf"
-                    src=move || {
-                        value
-                            .get()
-                            .map(|res| match res {
-                                Ok(v) => pdf_bytes_to_url(&v),
-                                Err(e) => "".to_string(),
-                            })
-                    }
-                />
-
+                <div class="card tonal">
+                    <embed
+                        type="application/pdf"
+                        src=move || {
+                            value
+                                .get()
+                                .map(|res| match res {
+                                    Ok(v) => pdf_bytes_to_url(&v),
+                                    Err(e) => "".to_string(),
+                                })
+                        }
+                    />
+                </div>
             </div>
         </div>
     }
