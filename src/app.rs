@@ -1,6 +1,3 @@
-use base64::prelude::*;
-use handlebars::Handlebars;
-use leptos::leptos_dom::logging::console_debug_log;
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
@@ -9,10 +6,6 @@ use leptos_router::{
 };
 use miette::Result;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
-use std::collections::HashMap;
-use std::path::PathBuf;
-use tempfile::tempdir;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -73,8 +66,22 @@ fn HomePage() -> impl IntoView {
     }
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+#[allow(unused)]
+struct CreateWorksheet {
+    template_path: String,
+    client_title: String,
+    client_name: String,
+    practice_name: String,
+    therapist_title: String,
+    therapist_name: String,
+}
+
+
 #[server]
 pub async fn branding(client_name: String, client_title: String) -> Result<Vec<u8>, ServerFnError> {
+    use sha2::{Digest, Sha256};
+
     let client_title = if client_title.trim().is_empty() {
         "Клиент:".to_string()
     } else {
@@ -83,55 +90,27 @@ pub async fn branding(client_name: String, client_title: String) -> Result<Vec<u
 
     let payload = CreateWorksheet {
         template_path: "assets/worksheets/dnevnik-goryachih-tochek".to_string(),
-        client_title: "String".to_string(),
+        client_title: client_title.to_string(),
         client_name: client_name.clone(),
-        practice_name: "String".to_string(),
-        therapist_title: "String".to_string(),
-        therapist_name: "String".to_string(),
+        practice_name: "MentalDesk".to_string(),
+        therapist_title: "Therapist".to_string(),
+        therapist_name: "Name".to_string(),
     };
-
     let template_path = format!("{}/worksheet.tex", payload.template_path);
-    dbg!(&template_path);
-
     let content = tokio::fs::read_to_string(&template_path).await?;
-
-    let reg = Handlebars::new();
-    let mut data: HashMap<String, String> = HashMap::default();
-    // data.insert("client_title".to_owned(), "client title".to_owned());
-    data.insert("clientName".to_owned(), "client name".to_owned());
-
-    let latex = reg.render_template(&content, &data)?;
-    let latex = branding_(content, &payload)?;
+    
+    let latex = branding_template(content, &payload)?;
 
     let hash = Sha256::digest(&latex);
     let filename = format!("public/cache/{:x}.pdf", hash);
+
+    // let data = tokio::fs::read(&pdf_path).await;
     let data = compile_latex(&filename, &latex).await?;
-    // let data = tokio::fs::read(path).await?;
-    // 3. Alternative: serve bytes via a server route
-
-    // If the bytes come from backend:
-
-    // #[axum::handler]
-    // async fn pdf() -> impl IntoResponse {
-    //     let bytes: Vec<u8> = generate_pdf();
-
-    //     (
-    //         [(header::CONTENT_TYPE, "application/pdf")],
-    //         bytes
-    //     )
-    // }
-
-    // Then:
-
-    // <PdfViewer url="/api/pdf" />
-    // let web_filename = format!("cache/{:x}.pdf", hash);
-    // dbg!(&data);
 
     Ok(data)
 }
 
 fn pdf_bytes_to_url(bytes: &[u8]) -> String {
-    use web_sys::wasm_bindgen::JsCast;
     use web_sys::{Blob, BlobPropertyBag, Url};
 
     let array = js_sys::Uint8Array::from(bytes);
@@ -216,7 +195,7 @@ fn BrandingPage() -> impl IntoView {
                                 .get()
                                 .map(|res| match res {
                                     Ok(v) => pdf_bytes_to_url(&v),
-                                    Err(e) => "".to_string(),
+                                    Err(_) => "".to_string(),
                                 })
                         }
                     />
@@ -226,29 +205,12 @@ fn BrandingPage() -> impl IntoView {
     }
 }
 
-#[component]
-fn PdfPreview(url: String) -> impl IntoView {
-    view! { <embed src="" type="application/pdf" /> }
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-struct CreateWorksheet {
-    template_path: String,
-    client_title: String,
-    client_name: String,
-    practice_name: String,
-    therapist_title: String,
-    therapist_name: String,
-}
-
-#[derive(Deserialize, Serialize, Debug, PartialEq, PartialOrd, Ord, Eq)]
-struct Worksheet {
-    path: String,
-    mdx: String,
-}
 
 #[cfg(feature = "ssr")]
-fn branding_(content: String, worksheet: &CreateWorksheet) -> Result<String, ServerFnError> {
+fn branding_template(content: String, worksheet: &CreateWorksheet) -> Result<String, ServerFnError> {
+    use handlebars::Handlebars;
+    use std::collections::HashMap;
+
     let reg = Handlebars::new();
     let s = serde_json::to_string(worksheet).unwrap();
     let data: HashMap<String, String> = serde_json::from_str(&s).unwrap();
@@ -259,18 +221,16 @@ fn branding_(content: String, worksheet: &CreateWorksheet) -> Result<String, Ser
 
 #[cfg(feature = "ssr")]
 pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, ServerFnError> {
+    use tempfile::tempdir;
+    use std::path::PathBuf;
     use std::process::Stdio;
-    use tokio::fs::File;
     use tokio::io::AsyncWriteExt;
-    use tokio::io::{AsyncBufReadExt, BufReader, BufWriter};
     use tokio::process::Command;
 
     let dir = tempdir()?;
     let workdir = dir.path();
     let tex_path = workdir.join("main.tex");
     let mut file: tokio::fs::File = tokio::fs::File::create(&tex_path).await?;
-    // todo
-    // tokio::io::copy(&mut reader, &mut file).await?;
     file.write_all(latex.as_bytes()).await?;
     file.flush().await?;
 
@@ -292,32 +252,15 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
         .stderr(Stdio::piped())
         .spawn()?;
 
-    let stdout = child.stdout.take().ok_or_else(|| "stdout not available");
-    let stderr = child.stderr.take().ok_or_else(|| "stderr not available");
-
-    // let out_task = tokio::spawn(async move {
-    //     let mut lines = BufReader::new(stdout).lines();
-    //     while let Ok(Some(line)) = lines.next_line().await {
-    //         println!("[pdflatex] {line}");
-    //     }
-    // });
-
-    // let err_task = tokio::spawn(async move {
-    //     let mut lines = BufReader::new(stderr).lines();
-    //     while let Ok(Some(line)) = lines.next_line().await {
-    //         eprintln!("[pdflatex:err] {line}");
-    //     }
-    // });
-
-    let status = child.wait().await?;
-    // let _ = out_task.await;
-    // let _ = err_task.await;
-
+    let _ = child.wait().await?;
     let pdf_path = workdir.join("main.pdf");
 
     let out = PathBuf::from(filename);
     let data = tokio::fs::read(&pdf_path).await?;
-    tokio::fs::copy(&pdf_path, &out);
+    
+    tokio::spawn(async {
+        let _ = tokio::fs::copy(pdf_path, out).await;
+    });
 
     Ok(data)
 }
