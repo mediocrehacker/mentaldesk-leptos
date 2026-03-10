@@ -130,7 +130,6 @@ pub async fn branding(client_name: String, client_title: String) -> Result<Vec<u
     Ok(data)
 }
 
-
 fn pdf_bytes_to_url(bytes: &[u8]) -> String {
     use web_sys::wasm_bindgen::JsCast;
     use web_sys::{Blob, BlobPropertyBag, Url};
@@ -176,7 +175,7 @@ fn BrandingPage() -> impl IntoView {
                     <div>
                         <label class="field">
                             <span class="label">ФИО Клиента</span>
-                            <input type="text" name="client_name"  />
+                            <input type="text" name="client_name" />
                         </label>
                     </div>
                     <div>
@@ -184,11 +183,7 @@ fn BrandingPage() -> impl IntoView {
                             <span class="label">
                                 Форма обращение к клиенту
                             </span>
-                            <input
-                                type="text"
-                                name="client_title"
-                                placeholder="Клиент:"
-                            />
+                            <input type="text" name="client_title" placeholder="Клиент:" />
                         </label>
                     </div>
                     <div>
@@ -200,27 +195,20 @@ fn BrandingPage() -> impl IntoView {
                     </div>
                 </ActionForm>
             </div>
+
             <div class="branding__preview">
-            <div class="card elevated">
-            <iframe src={ move || {
-                value.get().map(|res| match res {
-                    Ok(v) => pdf_bytes_to_url(&v),
-                    Err(e) => "".to_string(),
-                })
-            }
-            } />
-
-                        // Display server response
-            // <embed type="application/pdf" src={
-            //     move || {
-            //         value.get().map(|res| match res {
-            //             Ok(v) => format!("{data:application/pdf;base64,}", BASE64_STANDARD.encode(v)),
-            //             Err(_) => "vec![]".to_string(),
-            //         })
-            //     }
-            // } />
-
-            </div>
+                <h3>Title</h3>
+                <embed
+                    type="application/pdf"
+                    src=move || {
+                        value
+                            .get()
+                            .map(|res| match res {
+                                Ok(v) => pdf_bytes_to_url(&v),
+                                Err(e) => "".to_string(),
+                            })
+                    }
+                />
 
             </div>
         </div>
@@ -229,9 +217,7 @@ fn BrandingPage() -> impl IntoView {
 
 #[component]
 fn PdfPreview(url: String) -> impl IntoView {
-    view! {
-        <embed src="" type="application/pdf"  />
-    }
+    view! { <embed src="" type="application/pdf" /> }
 }
 
 #[derive(Deserialize, Serialize, Debug)]
