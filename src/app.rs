@@ -102,7 +102,7 @@ pub async fn branding(client_name: String, client_title: String, therapist_name:
     let latex = branding_template(content, &payload)?;
 
     let hash = Sha256::digest(&latex);
-    let filename = format!("public/cache/{:x}.pdf", hash);
+    let filename = format!("assets/cache/{:x}.pdf", hash);
 
     // let data = tokio::fs::read(&pdf_path).await;
     let data = compile_latex(&filename, &latex).await?;
@@ -276,11 +276,9 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
     let pdf_path = workdir.join("main.pdf");
 
     let out = PathBuf::from(filename);
-    let data = tokio::fs::read(&pdf_path).await?;
     
-    tokio::spawn(async {
-        let _ = tokio::fs::copy(pdf_path, out).await;
-    });
+    let data = tokio::fs::read(&pdf_path).await?;
+    let _ = tokio::fs::copy(pdf_path, out).await;
 
     Ok(data)
 }
