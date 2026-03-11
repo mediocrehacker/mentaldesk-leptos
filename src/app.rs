@@ -1,3 +1,5 @@
+#[allow(dead_code)]
+
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
@@ -123,6 +125,25 @@ fn pdf_bytes_to_url(bytes: &[u8]) -> String {
     let blob = Blob::new_with_u8_array_sequence_and_options(&parts, &bag).unwrap();
     Url::create_object_url_with_blob(&blob).unwrap()
 }
+
+
+#[component]
+fn PdfPreview(src: MappedSignal<Option<Result<Vec<u8>, ServerFnError>>>) -> impl IntoView {
+    view! {
+        <embed
+            type="application/pdf"
+            src=move || {
+                src.get()
+                    .map(|res| match res {
+                        Ok(v) => pdf_bytes_to_url(&v),
+                        Err(_) => "".to_string(),
+                    })
+            }
+        />
+    }
+}
+
+
 #[component]
 fn BrandingPage() -> impl IntoView {
     let branding = ServerAction::<Branding>::new();
@@ -152,7 +173,6 @@ fn BrandingPage() -> impl IntoView {
                 <p>Заголовок рабочего листа</p>
             </div>
         </header>
-
         <div class="branding">
             <div class="branding__form">
                 <ActionForm action=branding>
@@ -193,7 +213,7 @@ fn BrandingPage() -> impl IntoView {
                             <input
                                 type="text"
                                 name="therapist_name"
-                                placeholder="Соснина Мария Викторовна"
+                                placeholder="Зубков Тимур Владимирович"
                             />
                         </label>
                     </div>
@@ -208,24 +228,12 @@ fn BrandingPage() -> impl IntoView {
 
             <div class="branding__preview">
                 <div class="card tonal">
-                    <embed
-                        type="application/pdf"
-                        src=move || {
-                            value
-                                .get()
-                                .map(|res| match res {
-                                    Ok(v) => pdf_bytes_to_url(&v),
-                                    Err(_) => "".to_string(),
-                                })
-                        }
-                    />
+                    <PdfPreview src=value />
                 </div>
             </div>
         </div>
     }
 }
-
-
 #[cfg(feature = "ssr")]
 fn branding_template(content: String, worksheet: &CreateWorksheet) -> Result<String, ServerFnError> {
     use handlebars::Handlebars;
