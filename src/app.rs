@@ -130,16 +130,21 @@ fn pdf_bytes_to_url(bytes: &[u8]) -> String {
 #[component]
 fn PdfPreview(src: MappedSignal<Option<Result<Vec<u8>, ServerFnError>>>) -> impl IntoView {
     view! {
-        <embed
-            type="application/pdf"
-            src=move || {
-                src.get()
-                    .map(|res| match res {
-                        Ok(v) => pdf_bytes_to_url(&v),
-                        Err(_) => "".to_string(),
-                    })
+        {move || match src.get() {
+            None => view! { <div class="branding__preview-loading"><div><h2 aria-busy="true">"Loading..."</h2></div></div> }.into_any(),
+            Some(res) => {
+                view! {
+                    <embed
+                        type="application/pdf"
+                        src=match res {
+                            Ok(v) => pdf_bytes_to_url(&v),
+                            Err(_) => "".to_string(),
+                        }
+                    />
+                }
+                    .into_any()
             }
-        />
+        }}
     }
 }
 

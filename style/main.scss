@@ -62,3 +62,11 @@ header {
     width: 100%;
     height: calc(80vh - 4rem);
 }
+
+.branding__preview-loading {
+    width: 100%;
+    height: calc(80vh - 4rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
