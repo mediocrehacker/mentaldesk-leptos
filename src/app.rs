@@ -4,7 +4,7 @@ use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
-    StaticSegment,
+    StaticSegment, path
 };
 use miette::Result;
 use serde::{Deserialize, Serialize};
@@ -47,7 +47,9 @@ pub fn App() -> impl IntoView {
                 <main class="wrapper">
                     <Routes fallback=|| "Page not found.".into_view()>
                         <Route path=StaticSegment("") view=HomePage />
-                        <Route path=StaticSegment("/branding") view=BrandingPage />
+            <Route path=StaticSegment("/branding") view=BrandingPage />
+            <Route path=path!("/branding/:id") view=BrandingPage />
+
                     </Routes>
                 </main>
                 <footer>FOOTER</footer>
@@ -71,7 +73,6 @@ fn HomePage() -> impl IntoView {
 #[derive(Deserialize, Serialize, Debug)]
 #[allow(unused)]
 struct CreateWorksheet {
-    template_path: String,
     client_title: String,
     client_name: String,
     practice_name: String,
@@ -81,7 +82,7 @@ struct CreateWorksheet {
 
 
 #[server]
-pub async fn branding(client_name: String, client_title: String, therapist_name: String, therapist_title: String, practice_name: String) -> Result<Vec<u8>, ServerFnError> {
+pub async fn branding(template_name: String, client_name: String, client_title: String, therapist_name: String, therapist_title: String, practice_name: String) -> Result<Vec<u8>, ServerFnError> {
     use sha2::{Digest, Sha256};
 
     let client_title = if client_title.trim().is_empty() {
@@ -91,14 +92,14 @@ pub async fn branding(client_name: String, client_title: String, therapist_name:
     };
 
     let payload = CreateWorksheet {
-        template_path: "assets/worksheets/dnevnik-goryachih-tochek".to_string(),
         client_title: client_title.to_string(),
         client_name: client_name.clone(),
         practice_name: practice_name.clone(),
         therapist_title: therapist_title.clone(),
         therapist_name: therapist_name.clone(),
     };
-    let template_path = format!("{}/worksheet.tex", payload.template_path);
+
+    let template_path = format!("assets/worksheets/{}/worksheet.tex", template_name);
     let content = tokio::fs::read_to_string(&template_path).await?;
     
     let latex = branding_template(content, &payload)?;
@@ -151,12 +152,20 @@ fn PdfPreview(src: MappedSignal<Option<Result<Vec<u8>, ServerFnError>>>) -> impl
 
 #[component]
 fn BrandingPage() -> impl IntoView {
+    use leptos_router::hooks::{use_params_map, use_query_map};
+
+    let params = use_params_map();
+    let query = use_query_map();
+
+    let id = move || params.read().get("id");
     let branding = ServerAction::<Branding>::new();
 
+    
     Effect::new({
         let branding = branding.clone();
         move |_| {
             branding.dispatch(Branding {
+                template_name: id().expect("msg"),
                 client_name: "Кириллов Егор Маркович".to_string(),
                 client_title: "Клиент:".to_string(),
                 practice_name: "MetnalDesk".to_string(),
