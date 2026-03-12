@@ -1,4 +1,6 @@
 #[allow(dead_code)]
+use leptos::Params;
+use leptos_router::params::Params;
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
@@ -72,7 +74,7 @@ fn HomePage() -> impl IntoView {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Default, Deserialize, Serialize, Debug)]
 #[allow(unused)]
 struct CreateWorksheet {
     client_title: String,
@@ -165,15 +167,54 @@ fn PdfPreview(src: MappedSignal<Option<Result<Vec<u8>, ServerFnError>>>) -> impl
     }
 }
 
+#[derive(Params, PartialEq)]
+struct BrandingParams {
+    id: String,
+}
+
+#[derive(Params, PartialEq)]
+struct BrandingQuery {
+    client_title: Option<String>,
+    client_name: Option<String>,
+    practice_name: Option<String>,
+    therapist_title: Option<String>,
+    therapist_name: Option<String>,
+}
+
 #[component]
 fn BrandingPage() -> impl IntoView {
-    use leptos_router::hooks::{use_params_map, use_query_map};
+    use leptos_router::hooks::{use_params, use_query};
 
-    let params = use_params_map();
-    let query = use_query_map();
+    let params = use_params::<BrandingParams>();
+    let query = use_query::<BrandingQuery>();
 
-    let id = move || params.read().get("id").unwrap_or_default();
-    
+    let id = move || {
+        params
+            .read()
+            .as_ref()
+            .ok()
+            .map(|params| params.id.clone())
+            .unwrap_or_default()
+    };
+
+    let create_worksheet = move || {
+        query
+            .read()
+            .as_ref()
+            .ok()
+            .map(|query|
+                 CreateWorksheet {
+                     client_title: query.client_title.clone().unwrap_or_default(),
+                     client_name: query.client_name.clone().unwrap_or_default(),
+                     practice_name: query.practice_name.clone().unwrap_or_default(),
+                     therapist_title: query.therapist_title.clone().unwrap_or_default(),
+                     therapist_name: query.therapist_name.clone().unwrap_or_default(),
+                 }
+            )
+            .unwrap_or_default()
+
+    };
+
     let branding = ServerAction::<Branding>::new();
 
     Effect::new({
@@ -199,13 +240,15 @@ fn BrandingPage() -> impl IntoView {
         <header>
             <h2>Брэндировать</h2>
             <div>
-                <p>Заголовок рабочего листа</p>
+            <p>Заголовок рабочего листа</p>
+            // <p>Practice name: { move || q()}</p>
+            <p>Заголовок рабочего листа</p>
             </div>
         </header>
         <div class="branding">
             <div class="branding__form">
                 <ActionForm action=branding>
-                    <input type="hidden" name="template_name" value=move || id().to_string() />
+                    <input type="hidden" name="template_name" value=move || id() />
                     <div>
                         <label class="field">
                             <span class="label">ФИО Клиента</span>
