@@ -17,7 +17,7 @@
 
 \renewcommand{\familydefault}{\sfdefault}
 
-\geometry{ a4paper, landscape, lmargin=32pt, rmargin=32pt, bmargin=48pt, tmargin=48pt}
+\geometry{ a4paper, lmargin=32pt, rmargin=32pt, bmargin=48pt, tmargin=48pt}
 
 \fancyhf{}
 \pagestyle{fancy}

@@ -1,44 +1,80 @@
 \documentclass{worksheet}
 
+\usepackage{tabularx}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{paratype}
+\usepackage{parskip}
+\usepackage{geometry}
+\usepackage{color}
+\usepackage{pbox}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{graphicx}
+\usepackage{calc}
+\usepackage{framed}
+\usepackage{background}
+\usepackage{changepage}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{fancyhdr}
+
+\makeatletter
+\newcommand{\DrawLine}{%
+  \begin{tikzpicture}
+  \path[use as bounding box] (0,0) -- (\linewidth,0);
+  \draw[color=black!75!black,dashed,dash phase=2pt]
+        (0-\kvtcb@leftlower-\kvtcb@boxsep,0)--
+        (\linewidth+\kvtcb@rightlower+\kvtcb@boxsep,0);
+  \end{tikzpicture}%
+  }
+\makeatother
+
+\fancyhf{}
+\pagestyle{fancy}
+\fancyhead[L]{\footnotesize{\textbf{ Дневник Горячих точек }}}
+\fancyhead[R]{ {{client_title}} {{client_name}} }
+\fancyfoot[L]{ {{practice_name}} }
+\fancyfoot[R]{\footnotesize{\textbf{ {{therapist_title}} } {{therapist_name}} }}
+
+
 \begin{document}
 
-% ==== BEGIN HEADER ==== 
-\begin{figure}[htbp]
-\begin{adjustwidth}{-0.2cm}{-0.2cm}
-\mbox{%
-\noindent
-\begin{minipage}[c][2.35cm][c]{2.2cm}
-\includegraphics[width=1.8cm, height=1.8cm]{logo}
-\end{minipage}%
 
-\begin{minipage}{10cm}
-\color{Black}
-\raggedright
-\parbox[c][][c]{10cm}{%
-  {\small \textbf{((clinicName))} \\}
-  {\small {((therapist))} }
-}%
-\vspace{0.2cm}
-\parbox[b][][b]{10cm}{%
-  \begin{scriptsize}
-    {((email))}
-  \end{scriptsize}\\
-  \begin{scriptsize}
-    {((phone))}
-  \end{scriptsize}
-}
-\end{minipage}
-\hskip 1.6cm
-\begin{minipage}{0.3\linewidth}
-\color{Black}
-  \raggedright
-  {\small Клиент: \\ \textbf{((client))} \\}
-  \vspace{0.2cm}
-  {\footnotesize Дата: \today } 
-\end{minipage}
-}
-\end{adjustwidth}
-\end{figure}
+% ==== BEGIN HEADER ==== 
+%% \begin{figure}[htbp]
+%% \begin{adjustwidth}{-0.2cm}{-0.2cm}
+%% \mbox{%
+%% \noindent
+%% \begin{minipage}[c][2.35cm][c]{2.2cm}
+%% \includegraphics[width=1.8cm, height=1.8cm]{logo}
+%% \end{minipage}%
+
+%% \begin{minipage}{10cm}
+%% \color{Black}
+%% \raggedright
+%% \parbox[c][][c]{10cm}{%
+%%   {\small {{practice_name}} \\}
+%%   {\small { {{therapist_name}} } }
+%% }%
+%% \vspace{0.2cm}
+%% \parbox[b][][b]{10cm}{%
+%%   \begin{scriptsize}
+%%     { {{therapist_title}} }
+%%   \end{scriptsize}\\
+%% }
+%% \end{minipage}
+%% \hskip 1.6cm
+%% \begin{minipage}{0.3\linewidth}
+%% \color{Black}
+%%   \raggedright
+%%   {\small {{client_title}} \\ {{client_name}} \\}
+%%   \vspace{0.2cm}
+%%   {\footnotesize Дата: \today } 
+%% \end{minipage}
+%% }
+%% \end{adjustwidth}
+%% \end{figure}
 % ==== END HEADER ====
 
 {\huge{Поведенческий эксперимент}}

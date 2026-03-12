@@ -234,6 +234,7 @@ fn BrandingPage() -> impl IntoView {
     view! {
         <header>
             <h2>Брэндировать</h2>
+            <p></p>
         </header>
         <div class="branding">
             <div class="branding__form">
@@ -353,6 +354,9 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
     )
     .await?;
     tokio::fs::copy("assets/shared/worksheet.cls", workdir.join("worksheet.cls")).await?;
+    tokio::fs::copy("assets/shared/worksheet2.cls", workdir.join("worksheet2.cls")).await?;
+    tokio::fs::copy("assets/shared/logo.pdf", workdir.join("logo.pdf")).await?;
+    tokio::fs::copy("assets/shared/background.pdf", workdir.join("background.pdf")).await?;
     tokio::fs::copy("assets/shared/survey.cls", workdir.join("survey.cls")).await?;
 
     let mut child = Command::new("pdflatex")
@@ -361,11 +365,12 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
         .arg("-halt-on-error")
         .arg("-file-line-error")
         .arg("main.tex")
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
+        // .stdout(Stdio::piped())
+        // .stderr(Stdio::piped())
         .spawn()?;
 
-    let _ = child.wait().await?;
+    let status = child.wait().await?;
+    dbg!(status);
     let pdf_path = workdir.join("main.pdf");
 
     let out = PathBuf::from(filename);
