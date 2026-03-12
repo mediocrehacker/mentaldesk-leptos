@@ -1,13 +1,14 @@
 #[allow(dead_code)]
-
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
-    StaticSegment, path
+    path, StaticSegment,
 };
 use miette::Result;
 use serde::{Deserialize, Serialize};
+use web_sys::SubmitEvent;
+use leptos::leptos_dom::logging;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -19,6 +20,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 <AutoReload options=options.clone() />
                 <HydrationScripts options />
                 <MetaTags />
+
             </head>
             <body>
                 <App />
@@ -47,8 +49,8 @@ pub fn App() -> impl IntoView {
                 <main class="wrapper">
                     <Routes fallback=|| "Page not found.".into_view()>
                         <Route path=StaticSegment("") view=HomePage />
-            <Route path=StaticSegment("/branding") view=BrandingPage />
-            <Route path=path!("/branding/:id") view=BrandingPage />
+                        // <Route path=StaticSegment("/branding") view=BrandingPage />
+                        <Route path=path!("/branding/:id") view=BrandingPage />
 
                     </Routes>
                 </main>
@@ -80,9 +82,15 @@ struct CreateWorksheet {
     therapist_name: String,
 }
 
-
 #[server]
-pub async fn branding(template_name: String, client_name: String, client_title: String, therapist_name: String, therapist_title: String, practice_name: String) -> Result<Vec<u8>, ServerFnError> {
+pub async fn branding(
+    template_name: String,
+    client_name: String,
+    client_title: String,
+    therapist_name: String,
+    therapist_title: String,
+    practice_name: String,
+) -> Result<Vec<u8>, ServerFnError> {
     use sha2::{Digest, Sha256};
 
     let client_title = if client_title.trim().is_empty() {
@@ -101,7 +109,7 @@ pub async fn branding(template_name: String, client_name: String, client_title: 
 
     let template_path = format!("assets/worksheets/{}/worksheet.tex", template_name);
     let content = tokio::fs::read_to_string(&template_path).await?;
-    
+
     let latex = branding_template(content, &payload)?;
 
     let hash = Sha256::digest(&latex);
@@ -127,12 +135,20 @@ fn pdf_bytes_to_url(bytes: &[u8]) -> String {
     Url::create_object_url_with_blob(&blob).unwrap()
 }
 
-
 #[component]
 fn PdfPreview(src: MappedSignal<Option<Result<Vec<u8>, ServerFnError>>>) -> impl IntoView {
     view! {
         {move || match src.get() {
-            None => view! { <div class="branding__preview-loading"><div><h2 aria-busy="true">"Loading..."</h2></div></div> }.into_any(),
+            None => {
+                view! {
+                    <div class="branding__preview-loading">
+                        <div>
+                            <h2 aria-busy="true">"Loading..."</h2>
+                        </div>
+                    </div>
+                }
+                    .into_any()
+            }
             Some(res) => {
                 view! {
                     <embed
@@ -149,7 +165,6 @@ fn PdfPreview(src: MappedSignal<Option<Result<Vec<u8>, ServerFnError>>>) -> impl
     }
 }
 
-
 #[component]
 fn BrandingPage() -> impl IntoView {
     use leptos_router::hooks::{use_params_map, use_query_map};
@@ -157,15 +172,15 @@ fn BrandingPage() -> impl IntoView {
     let params = use_params_map();
     let query = use_query_map();
 
-    let id = move || params.read().get("id");
+    let id = move || params.read().get("id").unwrap_or_default();
+    
     let branding = ServerAction::<Branding>::new();
 
-    
     Effect::new({
         let branding = branding.clone();
         move |_| {
             branding.dispatch(Branding {
-                template_name: id().expect("msg"),
+                template_name: id(),
                 client_name: "Кириллов Егор Маркович".to_string(),
                 client_title: "Клиент:".to_string(),
                 practice_name: "MetnalDesk".to_string(),
@@ -174,7 +189,7 @@ fn BrandingPage() -> impl IntoView {
             });
         }
     });
-    
+
     // holds the latest *returned* value from the server
     let value = branding.value();
     // check if the server has returned an error
@@ -190,6 +205,7 @@ fn BrandingPage() -> impl IntoView {
         <div class="branding">
             <div class="branding__form">
                 <ActionForm action=branding>
+                    <input type="hidden" name="template_name" value=move || id().to_string() />
                     <div>
                         <label class="field">
                             <span class="label">ФИО Клиента</span>
@@ -249,7 +265,10 @@ fn BrandingPage() -> impl IntoView {
     }
 }
 #[cfg(feature = "ssr")]
-fn branding_template(content: String, worksheet: &CreateWorksheet) -> Result<String, ServerFnError> {
+fn branding_template(
+    content: String,
+    worksheet: &CreateWorksheet,
+) -> Result<String, ServerFnError> {
     use handlebars::Handlebars;
     use std::collections::HashMap;
 
@@ -263,9 +282,9 @@ fn branding_template(content: String, worksheet: &CreateWorksheet) -> Result<Str
 
 #[cfg(feature = "ssr")]
 pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, ServerFnError> {
-    use tempfile::tempdir;
     use std::path::PathBuf;
     use std::process::Stdio;
+    use tempfile::tempdir;
     use tokio::io::AsyncWriteExt;
     use tokio::process::Command;
 
@@ -298,7 +317,7 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
     let pdf_path = workdir.join("main.pdf");
 
     let out = PathBuf::from(filename);
-    
+
     let data = tokio::fs::read(&pdf_path).await?;
     let _ = tokio::fs::copy(pdf_path, out).await;
 
