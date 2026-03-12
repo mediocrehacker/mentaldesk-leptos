@@ -95,12 +95,6 @@ pub async fn branding(
 ) -> Result<Vec<u8>, ServerFnError> {
     use sha2::{Digest, Sha256};
 
-    let client_title = if client_title.trim().is_empty() {
-        "Клиент:".to_string()
-    } else {
-        client_title
-    };
-
     let payload = CreateWorksheet {
         client_title: client_title.to_string(),
         client_name: client_name.clone(),
@@ -181,6 +175,8 @@ struct BrandingQuery {
     therapist_name: Option<String>,
 }
 
+// http://localhost:3000/branding/dnevnik-goryachih-tochek?practice_name=MentalDesk&therapist_name=Зубков Тимур Владимирович&therapist_title=Психотерапевт&client_title=Клиент:&client_name=Кириллов Егор Маркович
+
 #[component]
 fn BrandingPage() -> impl IntoView {
     use leptos_router::hooks::{use_params, use_query};
@@ -222,15 +218,14 @@ fn BrandingPage() -> impl IntoView {
         move |_| {
             branding.dispatch(Branding {
                 template_name: id(),
-                client_name: "Кириллов Егор Маркович".to_string(),
-                client_title: "Клиент:".to_string(),
-                practice_name: "MetnalDesk".to_string(),
-                therapist_title: "Психотерапевт:".to_string(),
-                therapist_name: "Зубков Тимур Владимирович".to_string(),
+                client_name: create_worksheet().client_name,
+                client_title: create_worksheet().client_title,
+                practice_name: create_worksheet().practice_name,
+                therapist_title: create_worksheet().therapist_title,
+                therapist_name: create_worksheet().therapist_name,
             });
         }
     });
-
     // holds the latest *returned* value from the server
     let value = branding.value();
     // check if the server has returned an error
@@ -239,11 +234,6 @@ fn BrandingPage() -> impl IntoView {
     view! {
         <header>
             <h2>Брэндировать</h2>
-            <div>
-            <p>Заголовок рабочего листа</p>
-            // <p>Practice name: { move || q()}</p>
-            <p>Заголовок рабочего листа</p>
-            </div>
         </header>
         <div class="branding">
             <div class="branding__form">
@@ -252,7 +242,12 @@ fn BrandingPage() -> impl IntoView {
                     <div>
                         <label class="field">
                             <span class="label">ФИО Клиента</span>
-                            <input type="text" name="client_name" />
+                            <input
+                                type="text"
+                                name="client_name"
+                                value=move || create_worksheet().client_name
+                            />
+
                         </label>
                     </div>
                     <div>
@@ -267,7 +262,13 @@ fn BrandingPage() -> impl IntoView {
                             <span class="label">
                                 Форма обращение к клиенту
                             </span>
-                            <input type="text" name="client_title" placeholder="Клиент:" />
+                            <input
+                                type="text"
+                                name="client_title"
+                                placeholder="Клиент:"
+                                value=move || create_worksheet().client_title
+                            />
+
                         </label>
                     </div>
                     <div>
@@ -277,7 +278,9 @@ fn BrandingPage() -> impl IntoView {
                                 type="text"
                                 name="therapist_title"
                                 placeholder="Психолог"
+                                value=move || create_worksheet().therapist_title
                             />
+
                         </label>
                     </div>
                     <div>
@@ -287,13 +290,19 @@ fn BrandingPage() -> impl IntoView {
                                 type="text"
                                 name="therapist_name"
                                 placeholder="Зубков Тимур Владимирович"
+                                value=move || create_worksheet().therapist_name
                             />
                         </label>
                     </div>
                     <div>
                         <label class="field">
                             <span class="label">Название Практики</span>
-                            <input type="text" name="practice_name" placeholder="MentalDesk" />
+                            <input
+                                type="text"
+                                name="practice_name"
+                                placeholder="MentalDesk"
+                                value=move || create_worksheet().practice_name
+                            />
                         </label>
                     </div>
                 </ActionForm>
