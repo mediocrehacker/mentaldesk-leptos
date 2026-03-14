@@ -1,15 +1,15 @@
-\documentclass{worksheet}
-
-\usepackage{tabularx}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
+\documentclass[a4paper,12pt,oneside,headsepline]{scrartcl}
 \usepackage[T2A]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[english,russian]{babel}
 \usepackage{paratype}
 \usepackage{parskip}
-\usepackage{geometry}
-\usepackage{color}
-\usepackage{pbox}
 \usepackage[dvipsnames]{xcolor}
+\usepackage{geometry}
 \usepackage{graphicx}
 \usepackage{calc}
 \usepackage{framed}
@@ -17,7 +17,15 @@
 \usepackage{changepage}
 \usepackage{tcolorbox}
 \usepackage{tikz}
-\usepackage{fancyhdr}
+
+
+\graphicspath{ {./imgs/} }
+\renewcommand{\familydefault}{\sfdefault}
+\geometry{ a4paper, lmargin=0.6cm, rmargin=0.6cm, bmargin=0.6cm, tmargin=0.7cm}
+
+\backgroundsetup{scale = 1, angle = 0, opacity = 1,
+contents = {\includegraphics[width = \paperwidth,
+height = \paperheight, keepaspectratio] {drawing.pdf}}}
 
 \makeatletter
 \newcommand{\DrawLine}{%
@@ -30,61 +38,53 @@
   }
 \makeatother
 
-\fancyhf{}
-\pagestyle{fancy}
-\fancyhead[L]{\footnotesize{\textbf{ Поведенческий эксперимент }}}
-\fancyhead[R]{ {{client_title}} {{client_name}} }
-\fancyfoot[L]{ {{practice_name}} }
-\fancyfoot[R]{\footnotesize{\textbf{ {{therapist_title}} } {{therapist_name}} }}
-
-
 \begin{document}
 
+\begin{figure}[htbp]
+\begin{adjustwidth}{-0.2cm}{-0.2cm}
+\mbox{%
+\noindent
+\begin{minipage}[c][2.35cm][c]{2.2cm}
+\includegraphics[width=1.8cm, height=1.8cm]{logo}
+\end{minipage}%
 
-% ==== BEGIN HEADER ==== 
-%% \begin{figure}[htbp]
-%% \begin{adjustwidth}{-0.2cm}{-0.2cm}
-%% \mbox{%
-%% \noindent
-%% \begin{minipage}[c][2.35cm][c]{2.2cm}
-%% \includegraphics[width=1.8cm, height=1.8cm]{logo}
-%% \end{minipage}%
+\begin{minipage}{10cm}
+\color{Black}
+\raggedright
+\parbox[c][][c]{10cm}{%
+  {\small Врач-психиатр, КПТ психолог \\}
+  {\small \textbf{Доктор Менталдескович Скор Скорович}}
+}%
+\vspace{0.2cm}
+\parbox[b][][b]{10cm}{%
+  \begin{scriptsize}
+    info@mentaldeskovich.academy
+  \end{scriptsize}\\
+  \begin{scriptsize}
+    +7-123-456-78-90
+  \end{scriptsize}
+}
+\end{minipage}
+\hskip 1.6cm
+\begin{minipage}{0.3\linewidth}
+\color{Black}
+  \raggedright
+  {\small Клиент: \\ \textbf{Фамилия Имя Отчество} \\}
+  \vspace{0.2cm}
+  {\footnotesize Дата: 29/10/2023 } 
+\end{minipage}
+}
+\end{adjustwidth}
+\end{figure}
 
-%% \begin{minipage}{10cm}
-%% \color{Black}
-%% \raggedright
-%% \parbox[c][][c]{10cm}{%
-%%   {\small {{practice_name}} \\}
-%%   {\small { {{therapist_name}} } }
-%% }%
-%% \vspace{0.2cm}
-%% \parbox[b][][b]{10cm}{%
-%%   \begin{scriptsize}
-%%     { {{therapist_title}} }
-%%   \end{scriptsize}\\
-%% }
-%% \end{minipage}
-%% \hskip 1.6cm
-%% \begin{minipage}{0.3\linewidth}
-%% \color{Black}
-%%   \raggedright
-%%   {\small {{client_title}} \\ {{client_name}} \\}
-%%   \vspace{0.2cm}
-%%   {\footnotesize Дата: \today } 
-%% \end{minipage}
-%% }
-%% \end{adjustwidth}
-%% \end{figure}
-% ==== END HEADER ====
-
-{\huge{Поведенческий эксперимент}}
+{\huge {Поведенческий эксперимент}}
 
 \begin{flushleft}
 \large{\textbf{Часть 1:} Прогноз}
 \end{flushleft}
 
 
-\begin{tcolorbox}[standard jigsaw, opacityback=0, top=0mm]
+\begin{tcolorbox}[standard jigsaw, opacityback=0, top=0]
 
 \vspace{.5\baselineskip}
 \parbox[][4cm][t]{18cm}{
@@ -119,7 +119,7 @@
 \end{flushleft}
 
 
-\begin{tcolorbox}[standard jigsaw,opacityback=0, top=0mm]
+\begin{tcolorbox}[standard jigsaw,opacityback=0, top=0]
 
 \vspace{.5\baselineskip}
 \parbox[][4cm][t]{18cm}{
@@ -137,12 +137,6 @@
 {\textbf{\large Новые идеи}} \\
 Чему вы научились? \\
 Учитывая данные эксперимента, каковы ваши новые идеи?}
-
 \end{tcolorbox}
 
 \end{document}
-
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: t
-%%% End:

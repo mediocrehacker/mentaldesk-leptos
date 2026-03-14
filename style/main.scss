@@ -15,6 +15,40 @@
     display: grid;
 }
 
+nav  {
+    height: var(--size-9);
+    border-bottom: 1px solid var(--gray-12);
+    display: flex;
+    align-items: center;
+}
+
+.navbar-start {
+    justify-content: flex-start;
+    align-items: center;
+    width: 50%;
+    display: inline-flex;
+}
+
+
+.navbar-center {
+    flex-shrink: 0;
+    font-size: var(--font-size-fluid-0);
+    gap: var(--size-2);
+    display: flex;
+}
+
+nav .button{
+    color: var(--stone-4);
+}
+
+.navbar-end {
+    justify-content: flex-end;
+    align-items: center;
+    width: 50%;
+    display: inline-flex
+}
+
+
 .wrapper {
     width: 90%;
     max-width: 1280px;

@@ -9,8 +9,6 @@ use leptos_router::{
 };
 use miette::Result;
 use serde::{Deserialize, Serialize};
-use web_sys::SubmitEvent;
-use leptos::leptos_dom::logging;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -47,7 +45,7 @@ pub fn App() -> impl IntoView {
         // content for this welcome page
         <Router>
             <div id="app">
-                <nav>HEADER</nav>
+                <Nav />
                 <main class="wrapper">
                     <Routes fallback=|| "Page not found.".into_view()>
                         <Route path=StaticSegment("") view=HomePage />
@@ -56,11 +54,30 @@ pub fn App() -> impl IntoView {
 
                     </Routes>
                 </main>
-                <footer>FOOTER</footer>
+                <footer></footer>
             </div>
         </Router>
     }
 }
+
+#[component]
+fn Nav() -> impl IntoView {
+    view! {
+        <nav>
+            <div class="navbar-start">
+                <h4><a class="button" href="https://mentaldesk.ru">MentalDesk</a></h4>
+            </div>
+            <div class="navbar-center">
+                <a class="button" href="https://mentaldesk.ru/about">О Проекте</a>
+                <a class="button" href="https://mentaldesk.ru/worksheets">Рабочие листы</a>
+                <a class="button" href="https://mentaldesk.ru/oprosniki">Опросники</a>
+            </div>
+            <div class="navbar-end">
+            </div>
+        </nav>
+    }
+}
+
 /// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
@@ -103,13 +120,13 @@ pub async fn branding(
         therapist_name: therapist_name.clone(),
     };
 
-    let template_path = format!("assets/worksheets/{}/worksheet.tex", template_name);
+    let template_path = format!("public/worksheets/{}/worksheet.tex", template_name);
     let content = tokio::fs::read_to_string(&template_path).await?;
 
     let latex = branding_template(content, &payload)?;
 
     let hash = Sha256::digest(&latex);
-    let filename = format!("assets/cache/{:x}.pdf", hash);
+    let filename = format!("public/cache/{:x}.pdf", hash);
 
     // let data = tokio::fs::read(&pdf_path).await;
     let data = compile_latex(&filename, &latex).await?;
@@ -336,7 +353,7 @@ fn branding_template(
 #[cfg(feature = "ssr")]
 pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, ServerFnError> {
     use std::path::PathBuf;
-    use std::process::Stdio;
+    // use std::process::Stdio;
     use tempfile::tempdir;
     use tokio::io::AsyncWriteExt;
     use tokio::process::Command;
@@ -349,15 +366,15 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
     file.flush().await?;
 
     tokio::fs::copy(
-        "assets/shared/worksheet_landscape.cls",
+        "public/shared/worksheet_landscape.cls",
         workdir.join("worksheet_landscape.cls"),
     )
     .await?;
-    tokio::fs::copy("assets/shared/worksheet.cls", workdir.join("worksheet.cls")).await?;
-    tokio::fs::copy("assets/shared/worksheet2.cls", workdir.join("worksheet2.cls")).await?;
-    tokio::fs::copy("assets/shared/logo.pdf", workdir.join("logo.pdf")).await?;
-    tokio::fs::copy("assets/shared/background.pdf", workdir.join("background.pdf")).await?;
-    tokio::fs::copy("assets/shared/survey.cls", workdir.join("survey.cls")).await?;
+    tokio::fs::copy("public/shared/worksheet.cls", workdir.join("worksheet.cls")).await?;
+    // tokio::fs::copy("shared/worksheet2.cls", workdir.join("worksheet2.cls")).await?;
+    // tokio::fs::copy("shared/logo.pdf", workdir.join("logo.pdf")).await?;
+    // tokio::fs::copy("shared/background.pdf", workdir.join("background.pdf")).await?;
+    tokio::fs::copy("public/shared/survey.cls", workdir.join("survey.cls")).await?;
 
     let mut child = Command::new("pdflatex")
         .current_dir(workdir)
@@ -369,8 +386,8 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
         // .stderr(Stdio::piped())
         .spawn()?;
 
-    let status = child.wait().await?;
-    dbg!(status);
+    let _status = child.wait().await?;
+    dbg!(&_status);
     let pdf_path = workdir.join("main.pdf");
 
     let out = PathBuf::from(filename);

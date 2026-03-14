@@ -1,0 +1,35 @@
+\documentclass{worksheet_landscape}
+
+\geometry{landscape, lmargin=16pt, rmargin=16pt, bmargin=48pt,
+  tmargin=48pt}
+
+\fancyhf{}
+\pagestyle{fancy}
+\fancyhead[L]{\footnotesize{\textbf{ Дневник Горячих точек }}}
+\fancyhead[R]{ {{client_title}} {{client_name}} }
+\fancyfoot[L]{ {{practice_name}} }
+\fancyfoot[R]{\footnotesize{\textbf{ {{therapist_title}} } {{therapist_name}} }}
+
+\begin{document}
+
+% Table 
+\begin{table}[]
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}{>{\raggedright\arraybackslash}c}
+
+\begin{tabularx}{\textwidth}{|Y|Y|Y|Y|}
+
+\hline
+\textbf{Событие} & \textbf{Эмоции} & \textbf{Оценка} & \textbf{``Обновление``} \\
+\small{Какой момент был худшим?} & \small{Оцените их интенсивность 0-100\%} & \small{Что для Вас значит этот момент? Во что Вы верили тогда?} & \small{Что Вы знаете сейчас о том моменте?} \\
+\hline
+& & & \\[425pt]
+\hline
+\end{tabularx}
+\end{center}
+\label{tab:activity_diary}
+\end{table}
+
+\end{document}
