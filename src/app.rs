@@ -123,6 +123,7 @@ pub async fn branding(
     let template_path = format!("public/worksheets/{}/worksheet.tex", template_name);
     let content = tokio::fs::read_to_string(&template_path).await?;
 
+
     let latex = branding_template(content, &payload)?;
 
     let hash = Sha256::digest(&latex);
@@ -251,7 +252,7 @@ fn BrandingPage() -> impl IntoView {
     view! {
         <header>
             <h2>Брэндировать</h2>
-            <p></p>
+            <p>tt</p>
         </header>
         <div class="branding">
             <div class="branding__form">
@@ -387,7 +388,6 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
         .spawn()?;
 
     let _status = child.wait().await?;
-    dbg!(&_status);
     let pdf_path = workdir.join("main.pdf");
 
     let out = PathBuf::from(filename);
