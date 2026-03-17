@@ -382,47 +382,47 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
     use tokio::process::Command;
     use tracing::{Level, error, info, event};
 
-    // event!(Level::INFO, "something happened");
+    event!(Level::INFO, "something happened");
 
-    // let conf = get_configuration(None).unwrap();
-    // let site_root = conf.leptos_options.site_root;
+    let conf = get_configuration(None).unwrap();
+    let site_root = conf.leptos_options.site_root;
     
     let dir = tempdir()?;
     let workdir = dir.path();
-    // let tex_path = workdir.join("main.tex");
-    // // event!(Level::INFO, "creat file");
+    let tex_path = workdir.join("main.tex");
+    event!(Level::INFO, "creat file");
 
-    // let mut file: tokio::fs::File = tokio::fs::File::create(&tex_path).await
-    //     .map_err(|err| {
-    //         error!(?err, "Failed to create");
-    //         err
-    //     })?;
-    // file.write_all(latex.as_bytes()).await?;
-    // file.flush().await?;
+    let mut file: tokio::fs::File = tokio::fs::File::create(&tex_path).await
+        .map_err(|err| {
+            error!(?err, "Failed to create");
+            err
+        })?;
+    file.write_all(latex.as_bytes()).await?;
+    file.flush().await?;
 
-    // event!(Level::INFO, "start copy files");
+    event!(Level::INFO, "start copy files");
 
-    // tokio::fs::copy(
-    //     format!("./{}/shared/worksheet_landscape.cls", site_root),
-    //     workdir.join("worksheet_landscape.cls"),
-    // )
-    //     .await
-    //     .map_err(|err| {
-    //         error!(?err, "Failed to copy");
-    //         err
-    //     })?;
+    tokio::fs::copy(
+        format!("./{}/shared/worksheet_landscape.cls", site_root),
+        workdir.join("worksheet_landscape.cls"),
+    )
+        .await
+        .map_err(|err| {
+            error!(?err, "Failed to copy");
+            err
+        })?;
     
-    // tokio::fs::copy(format!("./{}/shared/worksheet.cls", site_root), workdir.join("worksheet.cls")).await
-    //     .map_err(|err| {
-    //         error!(?err, "Failed to copy");
-    //         err
-    //     })?;
+    tokio::fs::copy(format!("./{}/shared/worksheet.cls", site_root), workdir.join("worksheet.cls")).await
+        .map_err(|err| {
+            error!(?err, "Failed to copy");
+            err
+        })?;
     // tokio::fs::copy("shared/worksheet2.cls", workdir.join("worksheet2.cls")).await?;
     // tokio::fs::copy("shared/logo.pdf", workdir.join("logo.pdf")).await?;
     // tokio::fs::copy("shared/background.pdf", workdir.join("background.pdf")).await?;
     // tokio::fs::copy(format!("./{}/shared/survey.cls", site_root), workdir.join("survey.cls")).await?;
 
-    // event!(Level::INFO, "before Command spawn");
+    event!(Level::INFO, "before Command spawn");
 
     let mut child = Command::new("pdflatex")
         .current_dir(workdir)
@@ -430,27 +430,19 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
         .arg("-halt-on-error")
         .arg("-file-line-error")
         .arg("main.tex")
-        .stdout(Stdio::piped())
+        // .stdout(Stdio::piped())
         // .stderr(Stdio::piped())
         .spawn()
-        .map_err(|err| {
-            error!(?err, "Error to spawn");
-            err
-        })?;
-
-    // event!(Level::INFO, "after Command spawn");
-
-    let status = child.wait().await
         .map_err(|err| {
             error!(?err, "status error");
             err
         })?;
 
-    // event!(Level::INFO, ?status);
 
+    let _status = child.wait().await?;
     let pdf_path = workdir.join("main.pdf");
 
-    // event!(Level::INFO, "before the read");
+    event!(Level::INFO, "before the read");
 
     let out = PathBuf::from(filename);
 
@@ -459,9 +451,8 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
         .map_err(|err| {
             error!(?err, "Failed to read");
             err
-        })?;
-
-    // let _ = tokio::fs::copy(pdf_path, out).await;
+        })?;;
+    let _ = tokio::fs::copy(pdf_path, out).await;
 
     Ok(data)
 }
