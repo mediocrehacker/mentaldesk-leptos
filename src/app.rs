@@ -9,7 +9,6 @@ use leptos_router::{
 };
 use miette::Result;
 use serde::{Deserialize, Serialize};
-use tracing::{error, info};
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -112,6 +111,7 @@ struct CreateWorksheet {
 }
 
 #[server]
+#[tracing::instrument]
 pub async fn branding(
     template_name: String,
     client_name: String,
@@ -121,6 +121,10 @@ pub async fn branding(
     practice_name: String,
 ) -> Result<Vec<u8>, ServerFnError> {
     use sha2::{Digest, Sha256};
+    use tracing::{error, info};
+
+    let conf = get_configuration(None).unwrap();
+    let site_root = conf.leptos_options.site_root;
 
     let payload = CreateWorksheet {
         client_title: client_title.to_string(),
@@ -130,16 +134,7 @@ pub async fn branding(
         therapist_name: therapist_name.clone(),
     };
 
-    let mut entries: tokio::fs::ReadDir = tokio::fs::read_dir(".").await?;
-
-    while let Some(entry) = entries.next_entry().await? {
-        let path = entry.path();
-        if path.is_file() {
-            info!(?path);
-        }
-    }
-
-    let template_path = format!("./public/worksheets/{}/worksheet.tex", template_name);
+    let template_path = format!("./{}/worksheets/{}/worksheet.tex", site_root, template_name);
     let content = tokio::fs::read_to_string(&template_path)
         .await
         .map_err(|err| {
@@ -150,7 +145,7 @@ pub async fn branding(
     let latex = branding_template(content, &payload)?;
 
     let hash = Sha256::digest(&latex);
-    let filename = format!("./public/cache/{:x}.pdf", hash);
+    let filename = format!("./{}/cache/{:x}.pdf", site_root, hash);
 
     // let data = tokio::fs::read(&pdf_path).await;
     let data = compile_latex(&filename, &latex)
@@ -378,30 +373,56 @@ fn branding_template(
 }
 
 #[cfg(feature = "ssr")]
+#[tracing::instrument]
 pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, ServerFnError> {
     use std::path::PathBuf;
-    // use std::process::Stdio;
+    use std::process::Stdio;
     use tempfile::tempdir;
     use tokio::io::AsyncWriteExt;
     use tokio::process::Command;
+    use tracing::{Level, error, info, event};
 
+    // event!(Level::INFO, "something happened");
+
+    // let conf = get_configuration(None).unwrap();
+    // let site_root = conf.leptos_options.site_root;
+    
     let dir = tempdir()?;
     let workdir = dir.path();
-    let tex_path = workdir.join("main.tex");
-    let mut file: tokio::fs::File = tokio::fs::File::create(&tex_path).await?;
-    file.write_all(latex.as_bytes()).await?;
-    file.flush().await?;
+    // let tex_path = workdir.join("main.tex");
+    // // event!(Level::INFO, "creat file");
 
-    tokio::fs::copy(
-        "./public/shared/worksheet_landscape.cls",
-        workdir.join("worksheet_landscape.cls"),
-    )
-    .await?;
-    tokio::fs::copy("./public/shared/worksheet.cls", workdir.join("worksheet.cls")).await?;
+    // let mut file: tokio::fs::File = tokio::fs::File::create(&tex_path).await
+    //     .map_err(|err| {
+    //         error!(?err, "Failed to create");
+    //         err
+    //     })?;
+    // file.write_all(latex.as_bytes()).await?;
+    // file.flush().await?;
+
+    // event!(Level::INFO, "start copy files");
+
+    // tokio::fs::copy(
+    //     format!("./{}/shared/worksheet_landscape.cls", site_root),
+    //     workdir.join("worksheet_landscape.cls"),
+    // )
+    //     .await
+    //     .map_err(|err| {
+    //         error!(?err, "Failed to copy");
+    //         err
+    //     })?;
+    
+    // tokio::fs::copy(format!("./{}/shared/worksheet.cls", site_root), workdir.join("worksheet.cls")).await
+    //     .map_err(|err| {
+    //         error!(?err, "Failed to copy");
+    //         err
+    //     })?;
     // tokio::fs::copy("shared/worksheet2.cls", workdir.join("worksheet2.cls")).await?;
     // tokio::fs::copy("shared/logo.pdf", workdir.join("logo.pdf")).await?;
     // tokio::fs::copy("shared/background.pdf", workdir.join("background.pdf")).await?;
-    tokio::fs::copy("./public/shared/survey.cls", workdir.join("survey.cls")).await?;
+    // tokio::fs::copy(format!("./{}/shared/survey.cls", site_root), workdir.join("survey.cls")).await?;
+
+    // event!(Level::INFO, "before Command spawn");
 
     let mut child = Command::new("pdflatex")
         .current_dir(workdir)
@@ -409,17 +430,38 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
         .arg("-halt-on-error")
         .arg("-file-line-error")
         .arg("main.tex")
-        // .stdout(Stdio::piped())
+        .stdout(Stdio::piped())
         // .stderr(Stdio::piped())
-        .spawn()?;
+        .spawn()
+        .map_err(|err| {
+            error!(?err, "Error to spawn");
+            err
+        })?;
 
-    let _status = child.wait().await?;
+    // event!(Level::INFO, "after Command spawn");
+
+    let status = child.wait().await
+        .map_err(|err| {
+            error!(?err, "status error");
+            err
+        })?;
+
+    // event!(Level::INFO, ?status);
+
     let pdf_path = workdir.join("main.pdf");
+
+    // event!(Level::INFO, "before the read");
 
     let out = PathBuf::from(filename);
 
-    let data = tokio::fs::read(&pdf_path).await?;
-    let _ = tokio::fs::copy(pdf_path, out).await;
+    let data = tokio::fs::read(&pdf_path)
+        .await
+        .map_err(|err| {
+            error!(?err, "Failed to read");
+            err
+        })?;
+
+    // let _ = tokio::fs::copy(pdf_path, out).await;
 
     Ok(data)
 }
