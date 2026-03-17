@@ -9,6 +9,7 @@ use leptos_router::{
 };
 use miette::Result;
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -120,7 +121,6 @@ pub async fn branding(
     practice_name: String,
 ) -> Result<Vec<u8>, ServerFnError> {
     use sha2::{Digest, Sha256};
-    use tracing::error;
 
     let payload = CreateWorksheet {
         client_title: client_title.to_string(),
@@ -144,7 +144,13 @@ pub async fn branding(
     let filename = format!("public/cache/{:x}.pdf", hash);
 
     // let data = tokio::fs::read(&pdf_path).await;
-    let data = compile_latex(&filename, &latex).await?;
+    let data = compile_latex(&filename, &latex)
+        .await
+        .map_err(|err| {
+            error!(?err, "Failed to compile latex");
+            err
+        })?;
+
 
     Ok(data)
 }
