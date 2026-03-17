@@ -1,8 +1,8 @@
+use leptos::prelude::*;
 #[allow(dead_code)]
 use leptos::Params;
-use leptos_router::params::Params;
-use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
+use leptos_router::params::Params;
 use leptos_router::{
     components::{Route, Router, Routes},
     path, StaticSegment,
@@ -65,15 +65,24 @@ fn Nav() -> impl IntoView {
     view! {
         <nav>
             <div class="navbar-start">
-                <h4><a class="button" href="https://mentaldesk.ru">MentalDesk</a></h4>
+                <h4>
+                    <a class="button" href="https://mentaldesk.ru">
+                        MentalDesk
+                    </a>
+                </h4>
             </div>
             <div class="navbar-center">
-                <a class="button" href="https://mentaldesk.ru/about">О Проекте</a>
-                <a class="button" href="https://mentaldesk.ru/worksheets">Рабочие листы</a>
-                <a class="button" href="https://mentaldesk.ru/oprosniki">Опросники</a>
+                <a class="button" href="https://mentaldesk.ru/about">
+                    О Проекте
+                </a>
+                <a class="button" href="https://mentaldesk.ru/worksheets">
+                    Рабочие листы
+                </a>
+                <a class="button" href="https://mentaldesk.ru/oprosniki">
+                    Опросники
+                </a>
             </div>
-            <div class="navbar-end">
-            </div>
+            <div class="navbar-end"></div>
         </nav>
     }
 }
@@ -111,6 +120,7 @@ pub async fn branding(
     practice_name: String,
 ) -> Result<Vec<u8>, ServerFnError> {
     use sha2::{Digest, Sha256};
+    use tracing::error;
 
     let payload = CreateWorksheet {
         client_title: client_title.to_string(),
@@ -121,8 +131,12 @@ pub async fn branding(
     };
 
     let template_path = format!("public/worksheets/{}/worksheet.tex", template_name);
-    let content = tokio::fs::read_to_string(&template_path).await?;
-
+    let content = tokio::fs::read_to_string(&template_path)
+        .await
+        .map_err(|err| {
+            error!(?err, "Failed to read template");
+            err
+        })?;
 
     let latex = branding_template(content, &payload)?;
 
@@ -216,17 +230,14 @@ fn BrandingPage() -> impl IntoView {
             .read()
             .as_ref()
             .ok()
-            .map(|query|
-                 CreateWorksheet {
-                     client_title: query.client_title.clone().unwrap_or_default(),
-                     client_name: query.client_name.clone().unwrap_or_default(),
-                     practice_name: query.practice_name.clone().unwrap_or_default(),
-                     therapist_title: query.therapist_title.clone().unwrap_or_default(),
-                     therapist_name: query.therapist_name.clone().unwrap_or_default(),
-                 }
-            )
+            .map(|query| CreateWorksheet {
+                client_title: query.client_title.clone().unwrap_or_default(),
+                client_name: query.client_name.clone().unwrap_or_default(),
+                practice_name: query.practice_name.clone().unwrap_or_default(),
+                therapist_title: query.therapist_title.clone().unwrap_or_default(),
+                therapist_name: query.therapist_name.clone().unwrap_or_default(),
+            })
             .unwrap_or_default()
-
     };
 
     let branding = ServerAction::<Branding>::new();
