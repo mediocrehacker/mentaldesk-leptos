@@ -9,7 +9,7 @@ use leptos_router::{
 };
 use miette::Result;
 use serde::{Deserialize, Serialize};
-use tracing::error;
+use tracing::{error, info};
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -130,7 +130,16 @@ pub async fn branding(
         therapist_name: therapist_name.clone(),
     };
 
-    let template_path = format!("public/worksheets/{}/worksheet.tex", template_name);
+    let mut entries: tokio::fs::ReadDir = tokio::fs::read_dir(".").await?;
+
+    while let Some(entry) = entries.next_entry().await? {
+        let path = entry.path();
+        if path.is_file() {
+            info!(?path);
+        }
+    }
+
+    let template_path = format!("./public/worksheets/{}/worksheet.tex", template_name);
     let content = tokio::fs::read_to_string(&template_path)
         .await
         .map_err(|err| {
@@ -141,7 +150,7 @@ pub async fn branding(
     let latex = branding_template(content, &payload)?;
 
     let hash = Sha256::digest(&latex);
-    let filename = format!("public/cache/{:x}.pdf", hash);
+    let filename = format!("./public/cache/{:x}.pdf", hash);
 
     // let data = tokio::fs::read(&pdf_path).await;
     let data = compile_latex(&filename, &latex)
@@ -384,15 +393,15 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
     file.flush().await?;
 
     tokio::fs::copy(
-        "public/shared/worksheet_landscape.cls",
+        "./public/shared/worksheet_landscape.cls",
         workdir.join("worksheet_landscape.cls"),
     )
     .await?;
-    tokio::fs::copy("public/shared/worksheet.cls", workdir.join("worksheet.cls")).await?;
+    tokio::fs::copy("./public/shared/worksheet.cls", workdir.join("worksheet.cls")).await?;
     // tokio::fs::copy("shared/worksheet2.cls", workdir.join("worksheet2.cls")).await?;
     // tokio::fs::copy("shared/logo.pdf", workdir.join("logo.pdf")).await?;
     // tokio::fs::copy("shared/background.pdf", workdir.join("background.pdf")).await?;
-    tokio::fs::copy("public/shared/survey.cls", workdir.join("survey.cls")).await?;
+    tokio::fs::copy("./public/shared/survey.cls", workdir.join("survey.cls")).await?;
 
     let mut child = Command::new("pdflatex")
         .current_dir(workdir)
