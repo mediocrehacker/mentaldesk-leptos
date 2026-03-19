@@ -4,8 +4,8 @@
 @import "https://cdn.jsdelivr.net/npm/opui-css@3.3.5/dist/theme-two/theme-two.css";
 @import "https://cdn.jsdelivr.net/npm/opui-css@3.3.5/dist/theme-two/components.css";
 
-// @import "https://cdn.jsdelivr.net/npm/opui-css@3.3.5/dist/theme-one/theme-one.css";
-// @import "https://cdn.jsdelivr.net/npm/opui-css@3.3.5/dist/theme-one/components.css";
+/* @import "https://cdn.jsdelivr.net/npm/opui-css@3.3.5/dist/theme-one/theme-one.css"; */
+/* @import "https://cdn.jsdelivr.net/npm/opui-css@3.3.5/dist/theme-one/components.css"; */
 
 #app {
     grid-template-rows: auto 1fr auto;
