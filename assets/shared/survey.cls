@@ -6,7 +6,6 @@
 \RequirePackage[T2A]{fontenc}
 \RequirePackage[utf8]{inputenc}
 \RequirePackage[english,russian]{babel}
-\RequirePackage{paratype}
 \RequirePackage{geometry}
 \RequirePackage{fancyhdr}
 \RequirePackage{wasysym}
@@ -15,7 +14,6 @@
 \RequirePackage{forloop}
 \RequirePackage{ifthen}
 \RequirePackage{setspace}
-\RequirePackage{pbox}
 
 \author{Mental Desk}
 

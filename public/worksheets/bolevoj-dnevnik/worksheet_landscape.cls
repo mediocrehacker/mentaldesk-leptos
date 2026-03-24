@@ -7,9 +7,11 @@
 \RequirePackage[T2A]{fontenc}
 \RequirePackage[utf8]{inputenc}
 \RequirePackage[english,russian]{babel}
+\RequirePackage{paratype}
 \RequirePackage{geometry}
 \RequirePackage{fancyhdr}
 \RequirePackage{color}
+\RequirePackage{pbox}
 \RequirePackage{array}
 
 \author{Mental Desk}
