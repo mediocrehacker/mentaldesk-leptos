@@ -373,7 +373,6 @@ fn branding_template(
 }
 
 #[cfg(feature = "ssr")]
-#[tracing::instrument]
 pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, ServerFnError> {
     use std::path::PathBuf;
     use std::process::Stdio;
@@ -427,7 +426,7 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
     let mut child = Command::new("pdflatex")
         .current_dir(workdir)
         .arg("-interaction=nonstopmode")
-        .arg("-halt-on-error")
+        // .arg("-halt-on-error")
         .arg("-file-line-error")
         .arg("main.tex")
         // .stdout(Stdio::piped())
@@ -439,10 +438,15 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
         })?;
 
 
-    let _status = child.wait().await?;
-    let pdf_path = workdir.join("main.pdf");
+    let status = child.wait().await?;
+    let workdir_list = std::fs::read_dir(&workdir)?;
+    for file in workdir_list {
+        event!(Level::INFO, "file {:?}", file);
+    }
+    
 
-    event!(Level::INFO, "before the read");
+    let pdf_path = workdir.join("main.pdf");
+    event!(Level::INFO, "before the read {}", status);
 
     let out = PathBuf::from(filename);
 
