@@ -1,5 +1,5 @@
 target "mentaldesk" {
   context = "."
   dockerfile = "Dockerfile"
-  tags = ["mentaldesk:latest"]
+  tags = ["mediocrehacker/mentaldesk:latest"]
 }

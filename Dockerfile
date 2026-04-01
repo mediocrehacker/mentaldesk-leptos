@@ -19,13 +19,13 @@ COPY . .
 # Build the app
 RUN cargo leptos build --release -vv
 
-FROM debian:trixie-slim AS runtime
+FROM texlive/texlive:latest-medium-src AS runtime
+
+RUN tlmgr option repository ctan && \
+    tlmgr update --self && \
+    tlmgr install cyrillic paratype lh babel-russian
+
 WORKDIR /app
-RUN apt-get update -y \
-  && apt-get install -y --no-install-recommends openssl ca-certificates texlive-base texlive-lang-cyrillic fonts-paratype \
-  && apt-get autoremove -y \
-  && apt-get clean -y \
-  && rm -rf /var/lib/apt/lists/*
 
 # Copy the server binary to the /app directory
 COPY --from=builder /app/target/release/mentaldesk /app/

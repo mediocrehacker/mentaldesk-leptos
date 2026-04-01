@@ -1,0 +1,58 @@
+FROM texlive/texlive:latest-medium-src
+
+RUN tlmgr option repository ctan && \
+    tlmgr update --self && \
+    tlmgr install cyrillic paratype lh babel-russian
+
+
+RUN mkdir -p /app
+WORKDIR /app
+COPY . .
+
+# pdflatex worksheet.tex
+
+# FROM debian:trixie-slim AS texlive
+# WORKDIR /app
+# RUN apt-get update -y \
+#   && apt-get install -y --no-install-recommends openssl ca-certificates texlive-base texlive-lang-cyrillic fonts-paratype \
+#   && apt-get autoremove -y \
+#   && apt-get clean -y \
+#   && rm -rf /var/lib/apt/lists/*
+
+# RUN mkdir -p /app
+# WORKDIR /app
+# COPY . .
+
+# # Create local texmf tree
+# RUN mkdir -p /root/texmf/tex/latex/mypackage
+
+
+# RUN tlmgr init-usertree --usertree /usr/local/share/texmf/
+# RUN tlmgr option repository https://mirror.ctan.org/systems/texlive/tlnet && \
+#     tlmgr update --self && \
+#     tlmgr install paratype
+
+# RUN tlmgr --usertree /usr/local/share/texmf/ install paratype
+# # Copy your .sty into the image
+# COPY mypackage.sty /root/texmf/tex/latex/mypackage/
+
+# # Refresh TeX file database
+# RUN mktexlsr
+
+# Copy the server binary to the /app directory
+# COPY --from=builder /app/target/release/mentaldesk /app/
+
+# # /target/site contains our JS/WASM/CSS, etc.
+# COPY --from=builder /app/target/site /app/site
+
+# # Copy Cargo.toml if it’s needed at runtime
+# COPY --from=builder /app/Cargo.toml /app/
+
+# Set any required env variables and
+# ENV RUST_LOG="info"
+# ENV LEPTOS_SITE_ADDR="0.0.0.0:8080"
+# ENV LEPTOS_SITE_ROOT="site"
+# EXPOSE 8080
+
+# # Run the server
+# CMD ["/app/mentaldesk"]
