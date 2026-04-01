@@ -22,7 +22,7 @@ RUN cargo leptos build --release -vv
 FROM debian:trixie-slim AS runtime
 WORKDIR /app
 RUN apt-get update -y \
-  && apt-get install -y --no-install-recommends openssl ca-certificates texlive-base texlive-lang-cyrillic \
+  && apt-get install -y --no-install-recommends openssl ca-certificates texlive-base texlive-lang-cyrillic fonts-paratype \
   && apt-get autoremove -y \
   && apt-get clean -y \
   && rm -rf /var/lib/apt/lists/*

@@ -10,6 +10,7 @@
 \RequirePackage{geometry}
 \RequirePackage{fancyhdr}
 \RequirePackage{color}
+\RequirePackage{paratype}
 \RequirePackage{array}
 
 \author{Mental Desk}
