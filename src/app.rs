@@ -274,7 +274,7 @@ fn BrandingPage() -> impl IntoView {
     view! {
         <header>
             <h2>Брэндировать</h2>
-            <p>tt</p>
+            <p></p>
         </header>
         <div class="branding">
             <div class="branding__form">
@@ -306,7 +306,6 @@ fn BrandingPage() -> impl IntoView {
                             <input
                                 type="text"
                                 name="client_title"
-                                placeholder="Клиент:"
                                 value=move || create_worksheet().client_title
                             />
 
@@ -318,7 +317,6 @@ fn BrandingPage() -> impl IntoView {
                             <input
                                 type="text"
                                 name="therapist_title"
-                                placeholder="Психолог"
                                 value=move || create_worksheet().therapist_title
                             />
 
@@ -330,7 +328,6 @@ fn BrandingPage() -> impl IntoView {
                             <input
                                 type="text"
                                 name="therapist_name"
-                                placeholder="Зубков Тимур Владимирович"
                                 value=move || create_worksheet().therapist_name
                             />
                         </label>
@@ -341,7 +338,6 @@ fn BrandingPage() -> impl IntoView {
                             <input
                                 type="text"
                                 name="practice_name"
-                                placeholder="MentalDesk"
                                 value=move || create_worksheet().practice_name
                             />
                         </label>
