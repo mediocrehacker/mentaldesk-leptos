@@ -1,3 +1,7 @@
+group "default" {
+  targets = ["mentaldesk"]
+}
+
 target "mentaldesk" {
   context = "."
   dockerfile = "Dockerfile"
