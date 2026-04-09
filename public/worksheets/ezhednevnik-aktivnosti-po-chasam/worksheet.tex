@@ -1,34 +1,20 @@
-\documentclass[a4paper,12pt]{article}
-\usepackage[T2A]{fontenc}
-\usepackage[utf8]{inputenc}
-\usepackage[english,russian]{babel}
-\usepackage{paratype}
-\usepackage[
-includehead,
-landscape,
-lmargin=16px,
-rmargin=16px,
-tmargin=16px,
-bmargin=48px
-]{geometry}
-
-\usepackage{fancyhdr}
+\documentclass[a4paper,12pt]{worksheet_landscape}
 \usepackage{tabularx}
+
+\fancyhf{}
+\pagestyle{fancy}
+\fancyhead[L]{\footnotesize{\textbf{ Дневник Активности }}}
+\fancyhead[R]{ {{client_title}} {{client_name}} }
+\fancyfoot[L]{ {{practice_name}} }
+\fancyfoot[R]{\footnotesize{\textbf{ {{therapist_title}} } {{therapist_name}} }}
+
 
 \begin{document}
 \title{Дневник Активности}
 \author{Mental Desk}
 % \date{}
 \pagestyle{fancy}
-\usefont{T2A}{PTSans-TLF}{m}{n}
 % \maketitle
-
-% Header and Footer
-\fancyhf{} % clear existing header/footer entries
-\fancyhead[L]{\textbf{Дневник Активности}}
-\fancyhead[R]{\scriptsize{Заполните, что вы \textbf{делали} в течении недели}}
-\fancyfoot[L]{Mental\textbf{Desk} \\ \footnotesize{Психолог: Ваше Имя Фамилия}}
-\fancyfoot[R]{\footnotesize{Клиент: Имя и Фамилия клиента} \\ \footnotesize{Дата: 01.09.2023}}
 
 % Table 
 \begin{table}[htbp]
