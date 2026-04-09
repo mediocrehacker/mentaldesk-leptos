@@ -72,7 +72,6 @@ style-file = "style/main.css"
 # Optional. Env: LEPTOS_ASSETS_DIR.
 assets-dir = "public"
 
-# The IP and port (ex: 127.0.0.1:3000) where the server serves the content. Use it in your server setup.
 site-addr = "127.0.0.1:3030"
 
 # The port to use for automatic reload monitoring
@@ -88,7 +87,8 @@ end2end-dir = "end2end"
 browserquery = "defaults"
 
 # The environment Leptos will run in, usually either "DEV" or "PROD"
-env = "DEV"
+# Metadata keys ["env"] from metadata.leptos are not recognized and will be ignored
+# env = "DEV"
 
 # The features to use when compiling the bin target
 #
