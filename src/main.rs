@@ -5,8 +5,6 @@ async fn main() {
     use leptos::prelude::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
     use mentaldesk::app::*;
-    use tracing_subscriber::fmt::Layer;
-    use tracing_subscriber::Layer as _;
     
     let subscriber = tracing_subscriber::fmt()
         .compact()

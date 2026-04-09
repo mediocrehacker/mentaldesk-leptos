@@ -121,7 +121,7 @@ pub async fn branding(
     practice_name: String,
 ) -> Result<Vec<u8>, ServerFnError> {
     use sha2::{Digest, Sha256};
-    use tracing::{error, info};
+    use tracing::{error};
 
     let conf = get_configuration(None).unwrap();
     let site_root = conf.leptos_options.site_root;
@@ -254,6 +254,7 @@ fn BrandingPage() -> impl IntoView {
 
     Effect::new({
         let branding = branding.clone();
+
         move |_| {
             branding.dispatch(Branding {
                 template_name: id(),
@@ -375,11 +376,10 @@ fn branding_template(
 #[cfg(feature = "ssr")]
 pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, ServerFnError> {
     use std::path::PathBuf;
-    use std::process::Stdio;
     use tempfile::tempdir;
     use tokio::io::AsyncWriteExt;
     use tokio::process::Command;
-    use tracing::{Level, error, info, event};
+    use tracing::{Level, error, event};
 
     event!(Level::INFO, "something happened");
 
@@ -455,7 +455,7 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
         .map_err(|err| {
             error!(?err, "Failed to read");
             err
-        })?;;
+        })?;
     let _ = tokio::fs::copy(pdf_path, out).await;
 
     Ok(data)
