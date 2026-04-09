@@ -110,6 +110,32 @@ struct CreateWorksheet {
     therapist_name: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ContentMeta {
+    title: String,
+    teaser: String,
+    is_ready: bool,
+}
+
+#[server]
+pub async fn get_content(template_name: String) -> Result<String, ServerFnError> {
+    use tracing::error;
+
+    let conf = get_configuration(None).unwrap();
+    let site_root = conf.leptos_options.site_root;
+    let template_path = format!("./{}/worksheets/{}/content.mdx", site_root, template_name);
+
+    let content = tokio::fs::read_to_string(&template_path)
+        .await
+        .map_err(|err| {
+            error!(?err, "Failed to read template");
+            err
+        })?;
+
+    Ok(content)
+}
+
 #[server]
 #[tracing::instrument]
 pub async fn branding(
@@ -121,7 +147,7 @@ pub async fn branding(
     practice_name: String,
 ) -> Result<Vec<u8>, ServerFnError> {
     use sha2::{Digest, Sha256};
-    use tracing::{error};
+    use tracing::error;
 
     let conf = get_configuration(None).unwrap();
     let site_root = conf.leptos_options.site_root;
@@ -148,13 +174,10 @@ pub async fn branding(
     let filename = format!("./{}/cache/{:x}.pdf", site_root, hash);
 
     // let data = tokio::fs::read(&pdf_path).await;
-    let data = compile_latex(&filename, &latex)
-        .await
-        .map_err(|err| {
-            error!(?err, "Failed to compile latex");
-            err
-        })?;
-
+    let data = compile_latex(&filename, &latex).await.map_err(|err| {
+        error!(?err, "Failed to compile latex");
+        err
+    })?;
 
     Ok(data)
 }
@@ -198,6 +221,25 @@ fn PdfPreview(src: MappedSignal<Option<Result<Vec<u8>, ServerFnError>>>) -> impl
                     />
                 }
                     .into_any()
+            }
+        }}
+    }
+}
+
+#[component]
+fn TitlePreview(meta: MappedSignal<Option<Result<String, ServerFnError>>>) -> impl IntoView {
+    use gray_matter::engine::YAML;
+    use gray_matter::{Matter, ParsedEntity};
+
+    let matter = Matter::<YAML>::new();
+
+    view! {
+        {move || match meta.get() {
+            None => view! { <p aria-busy="true">"..."</p> }.into_any(),
+            Some(res) => {
+                let result: ParsedEntity = matter.parse(&res.expect("msg")).expect("msg");
+                let data: ContentMeta = result.data.unwrap().deserialize().unwrap();
+                view! { <p>{data.title}</p> }.into_any()
             }
         }}
     }
@@ -250,11 +292,20 @@ fn BrandingPage() -> impl IntoView {
             .unwrap_or_default()
     };
 
+    let content = ServerAction::<GetContent>::new();
+    let content_value = content.value();
+
+    Effect::new({
+        move |_| {
+            content.dispatch(GetContent {
+                template_name: id(),
+            });
+        }
+    });
+
     let branding = ServerAction::<Branding>::new();
 
     Effect::new({
-        let branding = branding.clone();
-
         move |_| {
             branding.dispatch(Branding {
                 template_name: id(),
@@ -274,12 +325,12 @@ fn BrandingPage() -> impl IntoView {
     view! {
         <header>
             <h2>Брэндировать</h2>
-            <p></p>
+            <TitlePreview meta=content_value />
         </header>
         <div class="branding">
             <div class="branding__form">
                 <ActionForm action=branding>
-                    <input type="hidden" name="template_name" value=move || id() />
+                    <input type="hidden" name="template_name" value=id() />
                     <div>
                         <label class="field">
                             <span class="label">ФИО Клиента</span>
@@ -375,23 +426,22 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
     use tempfile::tempdir;
     use tokio::io::AsyncWriteExt;
     use tokio::process::Command;
-    use tracing::{Level, error, event};
+    use tracing::{error, event, Level};
 
     event!(Level::INFO, "something happened");
 
     let conf = get_configuration(None).unwrap();
     let site_root = conf.leptos_options.site_root;
-    
+
     let dir = tempdir()?;
     let workdir = dir.path();
     let tex_path = workdir.join("main.tex");
     event!(Level::INFO, "creat file");
 
-    let mut file: tokio::fs::File = tokio::fs::File::create(&tex_path).await
-        .map_err(|err| {
-            error!(?err, "Failed to create");
-            err
-        })?;
+    let mut file: tokio::fs::File = tokio::fs::File::create(&tex_path).await.map_err(|err| {
+        error!(?err, "Failed to create");
+        err
+    })?;
     file.write_all(latex.as_bytes()).await?;
     file.flush().await?;
 
@@ -401,17 +451,21 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
         format!("./{}/shared/worksheet_landscape.cls", site_root),
         workdir.join("worksheet_landscape.cls"),
     )
-        .await
-        .map_err(|err| {
-            error!(?err, "Failed to copy");
-            err
-        })?;
-    
-    tokio::fs::copy(format!("./{}/shared/worksheet.cls", site_root), workdir.join("worksheet.cls")).await
-        .map_err(|err| {
-            error!(?err, "Failed to copy");
-            err
-        })?;
+    .await
+    .map_err(|err| {
+        error!(?err, "Failed to copy");
+        err
+    })?;
+
+    tokio::fs::copy(
+        format!("./{}/shared/worksheet.cls", site_root),
+        workdir.join("worksheet.cls"),
+    )
+    .await
+    .map_err(|err| {
+        error!(?err, "Failed to copy");
+        err
+    })?;
     // tokio::fs::copy("shared/worksheet2.cls", workdir.join("worksheet2.cls")).await?;
     // tokio::fs::copy("shared/logo.pdf", workdir.join("logo.pdf")).await?;
     // tokio::fs::copy("shared/background.pdf", workdir.join("background.pdf")).await?;
@@ -433,25 +487,21 @@ pub async fn compile_latex(filename: &str, latex: &str) -> Result<Vec<u8>, Serve
             err
         })?;
 
-
     let status = child.wait().await?;
     let workdir_list = std::fs::read_dir(&workdir)?;
     for file in workdir_list {
         event!(Level::INFO, "file {:?}", file);
     }
-    
 
     let pdf_path = workdir.join("main.pdf");
     event!(Level::INFO, "before the read {}", status);
 
     let out = PathBuf::from(filename);
 
-    let data = tokio::fs::read(&pdf_path)
-        .await
-        .map_err(|err| {
-            error!(?err, "Failed to read");
-            err
-        })?;
+    let data = tokio::fs::read(&pdf_path).await.map_err(|err| {
+        error!(?err, "Failed to read");
+        err
+    })?;
     let _ = tokio::fs::copy(pdf_path, out).await;
 
     Ok(data)
